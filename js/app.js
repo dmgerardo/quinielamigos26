@@ -822,16 +822,19 @@ async function loadPublicTournaments() {
   if (!el) return;
   el.innerHTML = `<p class="public-loading">Cargando quinielas…</p>`;
   try {
-    const snap = await db.ref("publicTournaments")
-      .orderByChild("createdAt").limitToLast(30).get();
+    // Sin orderByChild para evitar requerir índice en las reglas;
+    // ordenamos por createdAt en el cliente.
+    const snap = await db.ref("publicTournaments").get();
 
     if (!snap.exists()) {
-      el.innerHTML = `<p class="public-empty">No hay quinielas disponibles aún. ¡Crea la primera!</p>`;
+      el.innerHTML = `<p class="public-empty">No hay quinielas disponibles. ¡Sé el primero en crear una!</p>`;
       return;
     }
 
     const items = [];
-    snap.forEach((c) => items.unshift({ code: c.key, ...c.val() }));
+    snap.forEach((c) => items.push({ code: c.key, ...c.val() }));
+    items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (items.length > 30) items.splice(30);
 
     el.innerHTML = `
       <p class="public-hint">Elige una quiniela para unirte:</p>
@@ -849,8 +852,11 @@ async function loadPublicTournaments() {
         $("#input-code").scrollIntoView({ behavior: "smooth", block: "nearest" });
       })
     );
-  } catch (_) {
-    el.innerHTML = `<p class="public-empty">No se pudo cargar la lista.</p>`;
+  } catch (e) {
+    console.warn("[publicTournaments]", e.code, e.message);
+    el.innerHTML = `<p class="public-empty">No se pudo cargar la lista. <a href="#" id="retry-list" style="color:var(--accent)">Reintentar</a></p>`;
+    const r = document.getElementById("retry-list");
+    if (r) r.addEventListener("click", (ev) => { ev.preventDefault(); loadPublicTournaments(); });
   }
 }
 
