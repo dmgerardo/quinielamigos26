@@ -2,7 +2,8 @@
  *  ESTRUCTURA DEL TORNEO – MUNDIAL 2026 (datos oficiales)
  *  48 equipos en 12 grupos (A–L). Calendario real de fase de
  *  grupos y eliminatorias generado desde el fixture oficial.
- *  Horarios en hora del Este de EE. UU. (ET).
+ *  "kickoff" es un instante en UTC; la app lo muestra en la zona
+ *  horaria local de cada usuario (Intl.DateTimeFormat).
  *  NO EDITAR A MANO: regenerar con _gen_fixtures.py si cambia.
  * ========================================================= */
 
@@ -53,7 +54,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 11 jun · 15:00 ET",
+    "kickoff": "2026-06-11T19:00:00Z",
     "venue": "Mexico City",
     "editable": false
   },
@@ -72,7 +73,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 11 jun · 22:00 ET",
+    "kickoff": "2026-06-12T02:00:00Z",
     "venue": "Guadalajara",
     "editable": false
   },
@@ -91,7 +92,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 18 jun · 12:00 ET",
+    "kickoff": "2026-06-18T16:00:00Z",
     "venue": "Atlanta",
     "editable": false
   },
@@ -110,7 +111,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 18 jun · 21:00 ET",
+    "kickoff": "2026-06-19T01:00:00Z",
     "venue": "Guadalajara",
     "editable": false
   },
@@ -129,7 +130,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 24 jun · 21:00 ET",
+    "kickoff": "2026-06-25T01:00:00Z",
     "venue": "Mexico City",
     "editable": false
   },
@@ -148,7 +149,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 24 jun · 21:00 ET",
+    "kickoff": "2026-06-25T01:00:00Z",
     "venue": "Monterrey",
     "editable": false
   },
@@ -167,7 +168,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 12 jun · 15:00 ET",
+    "kickoff": "2026-06-12T19:00:00Z",
     "venue": "Toronto",
     "editable": false
   },
@@ -186,7 +187,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 13 jun · 15:00 ET",
+    "kickoff": "2026-06-13T19:00:00Z",
     "venue": "San Francisco Bay Area",
     "editable": false
   },
@@ -205,7 +206,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 18 jun · 15:00 ET",
+    "kickoff": "2026-06-18T19:00:00Z",
     "venue": "Los Angeles",
     "editable": false
   },
@@ -224,7 +225,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 18 jun · 18:00 ET",
+    "kickoff": "2026-06-18T22:00:00Z",
     "venue": "Vancouver",
     "editable": false
   },
@@ -243,7 +244,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 24 jun · 15:00 ET",
+    "kickoff": "2026-06-24T19:00:00Z",
     "venue": "Vancouver",
     "editable": false
   },
@@ -262,7 +263,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 24 jun · 15:00 ET",
+    "kickoff": "2026-06-24T19:00:00Z",
     "venue": "Seattle",
     "editable": false
   },
@@ -281,7 +282,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 13 jun · 18:00 ET",
+    "kickoff": "2026-06-13T22:00:00Z",
     "venue": "New York / New Jersy",
     "editable": false
   },
@@ -300,7 +301,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 13 jun · 21:00 ET",
+    "kickoff": "2026-06-14T01:00:00Z",
     "venue": "Boston",
     "editable": false
   },
@@ -319,7 +320,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 19 jun · 18:00 ET",
+    "kickoff": "2026-06-19T22:00:00Z",
     "venue": "Boston",
     "editable": false
   },
@@ -338,7 +339,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 19 jun · 21:00 ET",
+    "kickoff": "2026-06-20T01:00:00Z",
     "venue": "Philadelphia",
     "editable": false
   },
@@ -357,7 +358,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 24 jun · 18:00 ET",
+    "kickoff": "2026-06-24T22:00:00Z",
     "venue": "Miami",
     "editable": false
   },
@@ -376,7 +377,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 24 jun · 18:00 ET",
+    "kickoff": "2026-06-24T22:00:00Z",
     "venue": "Atlanta",
     "editable": false
   },
@@ -395,7 +396,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 12 jun · 21:00 ET",
+    "kickoff": "2026-06-13T01:00:00Z",
     "venue": "Los Angeles",
     "editable": false
   },
@@ -414,7 +415,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 13 jun · 00:00 ET",
+    "kickoff": "2026-06-13T04:00:00Z",
     "venue": "Vancouver",
     "editable": false
   },
@@ -433,7 +434,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 19 jun · 15:00 ET",
+    "kickoff": "2026-06-19T19:00:00Z",
     "venue": "Seattle",
     "editable": false
   },
@@ -452,7 +453,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 19 jun · 00:00 ET",
+    "kickoff": "2026-06-19T04:00:00Z",
     "venue": "San Francisco Bay Area",
     "editable": false
   },
@@ -471,7 +472,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 25 jun · 22:00 ET",
+    "kickoff": "2026-06-26T02:00:00Z",
     "venue": "Los Angeles",
     "editable": false
   },
@@ -490,7 +491,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 25 jun · 22:00 ET",
+    "kickoff": "2026-06-26T02:00:00Z",
     "venue": "San Francisco Bay Area",
     "editable": false
   },
@@ -509,7 +510,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Dom 14 jun · 13:00 ET",
+    "kickoff": "2026-06-14T17:00:00Z",
     "venue": "Houston",
     "editable": false
   },
@@ -528,7 +529,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Dom 14 jun · 19:00 ET",
+    "kickoff": "2026-06-14T23:00:00Z",
     "venue": "Philadelphia",
     "editable": false
   },
@@ -547,7 +548,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 20 jun · 16:00 ET",
+    "kickoff": "2026-06-20T20:00:00Z",
     "venue": "Toronto",
     "editable": false
   },
@@ -566,7 +567,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 20 jun · 20:00 ET",
+    "kickoff": "2026-06-21T00:00:00Z",
     "venue": "Kansas City",
     "editable": false
   },
@@ -585,7 +586,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 25 jun · 16:00 ET",
+    "kickoff": "2026-06-25T20:00:00Z",
     "venue": "Philadelphia",
     "editable": false
   },
@@ -604,7 +605,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 25 jun · 16:00 ET",
+    "kickoff": "2026-06-25T20:00:00Z",
     "venue": "New York / New Jersy",
     "editable": false
   },
@@ -623,7 +624,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Dom 14 jun · 16:00 ET",
+    "kickoff": "2026-06-14T20:00:00Z",
     "venue": "Dallas",
     "editable": false
   },
@@ -642,7 +643,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Dom 14 jun · 22:00 ET",
+    "kickoff": "2026-06-15T02:00:00Z",
     "venue": "Monterrey",
     "editable": false
   },
@@ -661,7 +662,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 20 jun · 13:00 ET",
+    "kickoff": "2026-06-20T17:00:00Z",
     "venue": "Houston",
     "editable": false
   },
@@ -680,7 +681,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 20 jun · 00:00 ET",
+    "kickoff": "2026-06-20T04:00:00Z",
     "venue": "Monterrey",
     "editable": false
   },
@@ -699,7 +700,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 25 jun · 19:00 ET",
+    "kickoff": "2026-06-25T23:00:00Z",
     "venue": "Dallas",
     "editable": false
   },
@@ -718,7 +719,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Jue 25 jun · 19:00 ET",
+    "kickoff": "2026-06-25T23:00:00Z",
     "venue": "Kansas City",
     "editable": false
   },
@@ -737,7 +738,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Lun 15 jun · 15:00 ET",
+    "kickoff": "2026-06-15T19:00:00Z",
     "venue": "Seattle",
     "editable": false
   },
@@ -756,7 +757,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Lun 15 jun · 21:00 ET",
+    "kickoff": "2026-06-16T01:00:00Z",
     "venue": "Los Angeles",
     "editable": false
   },
@@ -775,7 +776,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Dom 21 jun · 15:00 ET",
+    "kickoff": "2026-06-21T19:00:00Z",
     "venue": "Los Angeles",
     "editable": false
   },
@@ -794,7 +795,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Dom 21 jun · 21:00 ET",
+    "kickoff": "2026-06-22T01:00:00Z",
     "venue": "Vancouver",
     "editable": false
   },
@@ -813,7 +814,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 26 jun · 23:00 ET",
+    "kickoff": "2026-06-27T03:00:00Z",
     "venue": "Seattle",
     "editable": false
   },
@@ -832,7 +833,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 26 jun · 23:00 ET",
+    "kickoff": "2026-06-27T03:00:00Z",
     "venue": "Vancouver",
     "editable": false
   },
@@ -851,7 +852,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Lun 15 jun · 12:00 ET",
+    "kickoff": "2026-06-15T16:00:00Z",
     "venue": "Atlanta",
     "editable": false
   },
@@ -870,7 +871,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Lun 15 jun · 18:00 ET",
+    "kickoff": "2026-06-15T22:00:00Z",
     "venue": "Miami",
     "editable": false
   },
@@ -889,7 +890,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Dom 21 jun · 12:00 ET",
+    "kickoff": "2026-06-21T16:00:00Z",
     "venue": "Atlanta",
     "editable": false
   },
@@ -908,7 +909,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Dom 21 jun · 18:00 ET",
+    "kickoff": "2026-06-21T22:00:00Z",
     "venue": "Miami",
     "editable": false
   },
@@ -927,7 +928,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 26 jun · 20:00 ET",
+    "kickoff": "2026-06-27T00:00:00Z",
     "venue": "Houston",
     "editable": false
   },
@@ -946,7 +947,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 26 jun · 20:00 ET",
+    "kickoff": "2026-06-27T00:00:00Z",
     "venue": "Guadalajara",
     "editable": false
   },
@@ -965,7 +966,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mar 16 jun · 15:00 ET",
+    "kickoff": "2026-06-16T19:00:00Z",
     "venue": "New York / New Jersy",
     "editable": false
   },
@@ -984,7 +985,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mar 16 jun · 18:00 ET",
+    "kickoff": "2026-06-16T22:00:00Z",
     "venue": "Boston",
     "editable": false
   },
@@ -1003,7 +1004,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Lun 22 jun · 17:00 ET",
+    "kickoff": "2026-06-22T21:00:00Z",
     "venue": "Philadelphia",
     "editable": false
   },
@@ -1022,7 +1023,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Lun 22 jun · 20:00 ET",
+    "kickoff": "2026-06-23T00:00:00Z",
     "venue": "New York / New Jersy",
     "editable": false
   },
@@ -1041,7 +1042,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 26 jun · 15:00 ET",
+    "kickoff": "2026-06-26T19:00:00Z",
     "venue": "Boston",
     "editable": false
   },
@@ -1060,7 +1061,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Vie 26 jun · 15:00 ET",
+    "kickoff": "2026-06-26T19:00:00Z",
     "venue": "Toronto",
     "editable": false
   },
@@ -1079,7 +1080,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mar 16 jun · 21:00 ET",
+    "kickoff": "2026-06-17T01:00:00Z",
     "venue": "Kansas City",
     "editable": false
   },
@@ -1098,7 +1099,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mar 16 jun · 00:00 ET",
+    "kickoff": "2026-06-16T04:00:00Z",
     "venue": "San Francisco Bay Area",
     "editable": false
   },
@@ -1117,7 +1118,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Lun 22 jun · 13:00 ET",
+    "kickoff": "2026-06-22T17:00:00Z",
     "venue": "Dallas",
     "editable": false
   },
@@ -1136,7 +1137,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Lun 22 jun · 23:00 ET",
+    "kickoff": "2026-06-23T03:00:00Z",
     "venue": "San Francisco Bay Area",
     "editable": false
   },
@@ -1155,7 +1156,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 27 jun · 22:00 ET",
+    "kickoff": "2026-06-28T02:00:00Z",
     "venue": "Kansas City",
     "editable": false
   },
@@ -1174,7 +1175,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 27 jun · 22:00 ET",
+    "kickoff": "2026-06-28T02:00:00Z",
     "venue": "Dallas",
     "editable": false
   },
@@ -1193,7 +1194,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 17 jun · 13:00 ET",
+    "kickoff": "2026-06-17T17:00:00Z",
     "venue": "Houston",
     "editable": false
   },
@@ -1212,7 +1213,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 17 jun · 22:00 ET",
+    "kickoff": "2026-06-18T02:00:00Z",
     "venue": "Mexico City",
     "editable": false
   },
@@ -1231,7 +1232,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mar 23 jun · 13:00 ET",
+    "kickoff": "2026-06-23T17:00:00Z",
     "venue": "Houston",
     "editable": false
   },
@@ -1250,7 +1251,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mar 23 jun · 22:00 ET",
+    "kickoff": "2026-06-24T02:00:00Z",
     "venue": "Guadalajara",
     "editable": false
   },
@@ -1269,7 +1270,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 27 jun · 19:30 ET",
+    "kickoff": "2026-06-27T23:30:00Z",
     "venue": "Miami",
     "editable": false
   },
@@ -1288,7 +1289,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 27 jun · 19:30 ET",
+    "kickoff": "2026-06-27T23:30:00Z",
     "venue": "Atlanta",
     "editable": false
   },
@@ -1307,7 +1308,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 17 jun · 16:00 ET",
+    "kickoff": "2026-06-17T20:00:00Z",
     "venue": "Dallas",
     "editable": false
   },
@@ -1326,7 +1327,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mié 17 jun · 19:00 ET",
+    "kickoff": "2026-06-17T23:00:00Z",
     "venue": "Toronto",
     "editable": false
   },
@@ -1345,7 +1346,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mar 23 jun · 16:00 ET",
+    "kickoff": "2026-06-23T20:00:00Z",
     "venue": "Boston",
     "editable": false
   },
@@ -1364,7 +1365,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Mar 23 jun · 19:00 ET",
+    "kickoff": "2026-06-23T23:00:00Z",
     "venue": "Toronto",
     "editable": false
   },
@@ -1383,7 +1384,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 27 jun · 17:00 ET",
+    "kickoff": "2026-06-27T21:00:00Z",
     "venue": "New York / New Jersy",
     "editable": false
   },
@@ -1402,7 +1403,7 @@ const WC_FIXTURES = [
     },
     "slotA": "",
     "slotB": "",
-    "date": "Sáb 27 jun · 17:00 ET",
+    "kickoff": "2026-06-27T21:00:00Z",
     "venue": "Philadelphia",
     "editable": false
   },
@@ -1421,7 +1422,7 @@ const WC_FIXTURES = [
     },
     "slotA": "2º Grupo A",
     "slotB": "2º Grupo B",
-    "date": "Dom 28 jun · 15:00 ET",
+    "kickoff": "2026-06-28T19:00:00Z",
     "venue": "Los Angeles",
     "editable": true
   },
@@ -1440,7 +1441,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo E",
     "slotB": "Mejor 3º",
-    "date": "Lun 29 jun · 16:30 ET",
+    "kickoff": "2026-06-29T20:30:00Z",
     "venue": "Boston",
     "editable": true
   },
@@ -1459,7 +1460,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo F",
     "slotB": "2º Grupo C",
-    "date": "Lun 29 jun · 21:00 ET",
+    "kickoff": "2026-06-30T01:00:00Z",
     "venue": "Monterrey",
     "editable": true
   },
@@ -1478,7 +1479,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo C",
     "slotB": "2º Grupo F",
-    "date": "Lun 29 jun · 13:00 ET",
+    "kickoff": "2026-06-29T17:00:00Z",
     "venue": "Houston",
     "editable": true
   },
@@ -1497,7 +1498,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo I",
     "slotB": "Mejor 3º",
-    "date": "Mar 30 jun · 17:00 ET",
+    "kickoff": "2026-06-30T21:00:00Z",
     "venue": "New York / New Jersey",
     "editable": true
   },
@@ -1516,7 +1517,7 @@ const WC_FIXTURES = [
     },
     "slotA": "2º Grupo E",
     "slotB": "2º Grupo I",
-    "date": "Mar 30 jun · 13:00 ET",
+    "kickoff": "2026-06-30T17:00:00Z",
     "venue": "Dallas",
     "editable": true
   },
@@ -1535,7 +1536,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo A",
     "slotB": "Mejor 3º",
-    "date": "Mar 30 jun · 21:00 ET",
+    "kickoff": "2026-07-01T01:00:00Z",
     "venue": "Mexico City",
     "editable": true
   },
@@ -1554,7 +1555,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo L",
     "slotB": "Mejor 3º",
-    "date": "Mié 1 jul · 12:00 ET",
+    "kickoff": "2026-07-01T16:00:00Z",
     "venue": "Atlanta",
     "editable": true
   },
@@ -1573,7 +1574,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo D",
     "slotB": "Mejor 3º",
-    "date": "Mié 1 jul · 20:00 ET",
+    "kickoff": "2026-07-02T00:00:00Z",
     "venue": "San Francisco Bay Area",
     "editable": true
   },
@@ -1592,7 +1593,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo G",
     "slotB": "Mejor 3º",
-    "date": "Mié 1 jul · 16:00 ET",
+    "kickoff": "2026-07-01T20:00:00Z",
     "venue": "Seattle",
     "editable": true
   },
@@ -1611,7 +1612,7 @@ const WC_FIXTURES = [
     },
     "slotA": "2º Grupo K",
     "slotB": "2º Grupo L",
-    "date": "Jue 2 jul · 19:00 ET",
+    "kickoff": "2026-07-02T23:00:00Z",
     "venue": "Toronto",
     "editable": true
   },
@@ -1630,7 +1631,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo H",
     "slotB": "2º Grupo J",
-    "date": "Jue 2 jul · 15:00 ET",
+    "kickoff": "2026-07-02T19:00:00Z",
     "venue": "Los Angeles",
     "editable": true
   },
@@ -1649,7 +1650,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo B",
     "slotB": "Mejor 3º",
-    "date": "Jue 2 jul · 23:00 ET",
+    "kickoff": "2026-07-03T03:00:00Z",
     "venue": "Vancouver",
     "editable": true
   },
@@ -1668,7 +1669,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo J",
     "slotB": "2º Grupo H",
-    "date": "Sáb 4 jul · 18:00 ET",
+    "kickoff": "2026-07-04T22:00:00Z",
     "venue": "Miami",
     "editable": true
   },
@@ -1687,7 +1688,7 @@ const WC_FIXTURES = [
     },
     "slotA": "1º Grupo K",
     "slotB": "Mejor 3º",
-    "date": "Vie 3 jul · 21:30 ET",
+    "kickoff": "2026-07-04T01:30:00Z",
     "venue": "Kansas City",
     "editable": true
   },
@@ -1706,7 +1707,7 @@ const WC_FIXTURES = [
     },
     "slotA": "2º Grupo D",
     "slotB": "2º Grupo G",
-    "date": "Vie 3 jul · 14:00 ET",
+    "kickoff": "2026-07-03T18:00:00Z",
     "venue": "Dallas",
     "editable": true
   },
@@ -1725,7 +1726,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #74",
     "slotB": "Ganador #77",
-    "date": "Sáb 4 jul · 17:00 ET",
+    "kickoff": "2026-07-04T21:00:00Z",
     "venue": "Philadelphia",
     "editable": true
   },
@@ -1744,7 +1745,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #73",
     "slotB": "Ganador #75",
-    "date": "Sáb 4 jul · 13:00 ET",
+    "kickoff": "2026-07-04T17:00:00Z",
     "venue": "Houston",
     "editable": true
   },
@@ -1763,7 +1764,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #76",
     "slotB": "Ganador #78",
-    "date": "Dom 5 jul · 16:00 ET",
+    "kickoff": "2026-07-05T20:00:00Z",
     "venue": "New York / New Jersey",
     "editable": true
   },
@@ -1782,7 +1783,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #79",
     "slotB": "Ganador #80",
-    "date": "Dom 5 jul · 20:00 ET",
+    "kickoff": "2026-07-06T00:00:00Z",
     "venue": "Mexico City",
     "editable": true
   },
@@ -1801,7 +1802,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #83",
     "slotB": "Ganador #84",
-    "date": "Lun 6 jul · 15:00 ET",
+    "kickoff": "2026-07-06T19:00:00Z",
     "venue": "Dallas",
     "editable": true
   },
@@ -1820,7 +1821,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #81",
     "slotB": "Ganador #82",
-    "date": "Lun 6 jul · 20:00 ET",
+    "kickoff": "2026-07-07T00:00:00Z",
     "venue": "Seattle",
     "editable": true
   },
@@ -1839,7 +1840,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #86",
     "slotB": "Ganador #88",
-    "date": "Mar 7 jul · 12:00 ET",
+    "kickoff": "2026-07-07T16:00:00Z",
     "venue": "Atlanta",
     "editable": true
   },
@@ -1858,7 +1859,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #85",
     "slotB": "Ganador #87",
-    "date": "Mar 7 jul · 16:00 ET",
+    "kickoff": "2026-07-07T20:00:00Z",
     "venue": "Vancouver",
     "editable": true
   },
@@ -1877,7 +1878,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #89",
     "slotB": "Ganador #90",
-    "date": "Jue 9 jul · 16:00 ET",
+    "kickoff": "2026-07-09T20:00:00Z",
     "venue": "Boston",
     "editable": true
   },
@@ -1896,7 +1897,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #93",
     "slotB": "Ganador #94",
-    "date": "Vie 10 jul · 15:00 ET",
+    "kickoff": "2026-07-10T19:00:00Z",
     "venue": "Los Angeles",
     "editable": true
   },
@@ -1915,7 +1916,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #91",
     "slotB": "Ganador #92",
-    "date": "Sáb 11 jul · 17:00 ET",
+    "kickoff": "2026-07-11T21:00:00Z",
     "venue": "Miami",
     "editable": true
   },
@@ -1934,7 +1935,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #95",
     "slotB": "Ganador #96",
-    "date": "Sáb 11 jul · 21:00 ET",
+    "kickoff": "2026-07-12T01:00:00Z",
     "venue": "Kansas City",
     "editable": true
   },
@@ -1953,7 +1954,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #97",
     "slotB": "Ganador #98",
-    "date": "Mar 14 jul · 15:00 ET",
+    "kickoff": "2026-07-14T19:00:00Z",
     "venue": "Dallas",
     "editable": true
   },
@@ -1972,7 +1973,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #99",
     "slotB": "Ganador #100",
-    "date": "Mié 15 jul · 15:00 ET",
+    "kickoff": "2026-07-15T19:00:00Z",
     "venue": "Atlanta",
     "editable": true
   },
@@ -1991,7 +1992,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Perdedor #101",
     "slotB": "Perdedor #102",
-    "date": "Sáb 18 jul · 17:00 ET",
+    "kickoff": "2026-07-18T21:00:00Z",
     "venue": "Miami",
     "editable": true
   },
@@ -2010,7 +2011,7 @@ const WC_FIXTURES = [
     },
     "slotA": "Ganador #101",
     "slotB": "Ganador #102",
-    "date": "Dom 19 jul · 15:00 ET",
+    "kickoff": "2026-07-19T19:00:00Z",
     "venue": "New York / New Jersey",
     "editable": true
   }

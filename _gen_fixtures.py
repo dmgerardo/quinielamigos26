@@ -36,9 +36,13 @@ def pdate(v):
     if ',' in s: s=s.split(',')[1].strip()
     m,d,y=s.split('.'); return dt.date(int(y),int(m),int(d))
 def ptime(v):
-    if isinstance(v,dt.time): return f"{v.hour:02d}:{v.minute:02d}"
-    p=str(v).strip().split(':'); return f"{int(p[0]):02d}:{int(p[1]):02d}"
-def fdt(d,hhmm): return f"{WD[d.weekday()]} {d.day} {MON[d.month-1]} · {hhmm} ET"
+    if isinstance(v,dt.time): return v.hour, v.minute
+    p=str(v).strip().split(':'); return int(p[0]), int(p[1])
+# Los horarios del fixture están en hora del Este (EDT = UTC-4 en jun-jul 2026).
+# Guardamos un instante absoluto en UTC; el navegador lo muestra en la zona del usuario.
+def et_to_utc_iso(d, hh, mm):
+    u = dt.datetime(d.year, d.month, d.day, hh, mm) + dt.timedelta(hours=4)
+    return u.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 HOME=[2,5,8,11,14,17]  # columnas de cada grupo en el bloque
 # (letra_grupo, fila_equipos_top, filas_de_jornada(city,date,teams)x6)
@@ -55,9 +59,9 @@ for letters,toprow,days in BLOCKS:
         groups[letter]=[resolve(gs.cell(toprow+k,col).value) for k in range(4)]
         for (crow,drow,trow) in days:
             venue=gs.cell(crow,col).value
-            d=pdate(gs.cell(drow,col).value); t=ptime(gs.cell(drow,col+1).value)
+            d=pdate(gs.cell(drow,col).value); hh,mm=ptime(gs.cell(drow,col+1).value)
             h=resolve(gs.cell(trow,col).value); a=resolve(gs.cell(trow,col+1).value)
-            gmatches.append((letter,h,a,fdt(d,t),str(venue).strip()))
+            gmatches.append((letter,h,a,et_to_utc_iso(d,hh,mm),str(venue).strip()))
 
 # --- Eliminatorias (num, slotA, slotB, sede, fecha ISO, hora) ---
 def slot(s):
@@ -120,20 +124,20 @@ KO=[
 fixtures=[]
 n=0
 for letter in ['A','B','C','D','E','F','G','H','I','J','K','L']:
-    for (g,h,a,date,venue) in [m for m in gmatches if m[0]==letter]:
+    for (g,h,a,kickoff,venue) in [m for m in gmatches if m[0]==letter]:
         n+=1
         fixtures.append({
             "id":f"m{n:03d}","no":n,"round":"grupos","group":g,
             "teamA":{"name":h[0],"flag":h[1]},"teamB":{"name":a[0],"flag":a[1]},
-            "slotA":"","slotB":"","date":date,"venue":venue,"editable":False
+            "slotA":"","slotB":"","kickoff":kickoff,"venue":venue,"editable":False
         })
 for rkey,rows in KO:
     for (num,sa,sb,venue,iso,hhmm) in rows:
-        d=dt.date.fromisoformat(iso)
+        d=dt.date.fromisoformat(iso); hh,mm=[int(x) for x in hhmm.split(':')]
         fixtures.append({
             "id":f"m{num:03d}","no":num,"round":rkey,"group":None,
             "teamA":{"name":"Por definir","flag":"🏳️"},"teamB":{"name":"Por definir","flag":"🏳️"},
-            "slotA":slot(sa),"slotB":slot(sb),"date":fdt(d,hhmm),"venue":venue,"editable":True
+            "slotA":slot(sa),"slotB":slot(sb),"kickoff":et_to_utc_iso(d,hh,mm),"venue":venue,"editable":True
         })
 
 assert len([f for f in fixtures if f['round']=='grupos'])==72, "grupos != 72"
@@ -153,7 +157,8 @@ out = '''/* =========================================================
  *  ESTRUCTURA DEL TORNEO – MUNDIAL 2026 (datos oficiales)
  *  48 equipos en 12 grupos (A–L). Calendario real de fase de
  *  grupos y eliminatorias generado desde el fixture oficial.
- *  Horarios en hora del Este de EE. UU. (ET).
+ *  "kickoff" es un instante en UTC; la app lo muestra en la zona
+ *  horaria local de cada usuario (Intl.DateTimeFormat).
  *  NO EDITAR A MANO: regenerar con _gen_fixtures.py si cambia.
  * ========================================================= */
 

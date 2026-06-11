@@ -257,9 +257,19 @@ function statusBadge(m) {
 function teamName(team, slot) {
   return (team.name === "Por definir" && slot) ? slot : team.name;
 }
+// Formatea el instante UTC del partido en la zona horaria LOCAL del usuario.
+const _DTF = new Intl.DateTimeFormat("es-MX", {
+  weekday: "short", day: "numeric", month: "short",
+  hour: "2-digit", minute: "2-digit", hour12: false
+});
+function fmtKickoff(iso) {
+  if (!iso) return "";
+  const s = _DTF.format(new Date(iso)).replace(/,/g, "");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 function metaLine(m) {
   return `${roundLabel(m.round)}${m.group ? " · Grupo " + m.group : ""}` +
-         `${m.date ? " · " + m.date : ""}${m.venue ? " · 📍 " + m.venue : ""}`;
+         `${m.kickoff ? " · " + fmtKickoff(m.kickoff) : ""}${m.venue ? " · 📍 " + m.venue : ""}`;
 }
 
 function matchCard(m, pred) {

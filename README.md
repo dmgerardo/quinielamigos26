@@ -119,7 +119,7 @@ tournaments/
 
 ## ⚙️ Personalización rápida
 
-- **Calendario oficial**: los 104 partidos (72 de grupos + 32 de eliminatorias), con sedes y fechas, se generan desde `worldcup-soccer-2026-2.xlsx` mediante `_gen_fixtures.py` (`python _gen_fixtures.py`). Los **horarios están en hora del Este de EE. UU. (ET)**. En eliminatorias, cada partido muestra el cupo de clasificación (ej. "1º Grupo A", "Mejor 3º", "Ganador #74") hasta que el admin carga los equipos reales.
+- **Calendario oficial**: los 104 partidos (72 de grupos + 32 de eliminatorias), con sedes y fechas, se generan desde `worldcup-soccer-2026-2.xlsx` mediante `_gen_fixtures.py` (`python _gen_fixtures.py`). Cada partido se guarda como un **instante en UTC** (`kickoff`) y la app lo muestra en la **zona horaria local de cada usuario** (`Intl.DateTimeFormat`), así cada amigo ve la hora correcta sin importar dónde esté. En eliminatorias, cada partido muestra el cupo de clasificación (ej. "1º Grupo A", "Mejor 3º", "Ganador #74") hasta que el admin carga los equipos reales.
 - **Equipos/grupos**: edita `DEFAULT_GROUPS` en `js/tournament-data.js` (o regenera con el script).
 - **Puntos**: ajusta `POINTS_RESULT`, `POINTS_EXACT`, `CHAMPION_POINTS` en `js/scoring.js`.
 - **Colores/tema**: variables CSS en `:root` dentro de `css/styles.css`.
