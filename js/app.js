@@ -128,6 +128,7 @@ async function handleCreate() {
   if (!name) return;
   const tname = $("#input-tname").value.trim() || "Quiniela Mundial 2026";
   const password = $("#input-password").value;
+  if (password.length < 4) { showAuthError("Escribe una contraseña de al menos 4 caracteres."); return; }
 
   let code, exists = true, tries = 0;
   do {
@@ -172,6 +173,7 @@ async function handleJoin() {
   const code = $("#input-code").value.trim().toUpperCase();
   if (code.length < 4) { showAuthError("Código inválido."); return; }
   const password = $("#input-password").value;
+  if (password.length < 4) { showAuthError("Escribe una contraseña de al menos 4 caracteres."); return; }
 
   const snap = await db.ref("tournaments/" + code + "/name").get();
   if (!snap.exists()) { showAuthError("No existe una quiniela con ese código."); return; }
