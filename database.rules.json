@@ -34,6 +34,7 @@
             "name":         { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20" },
             "championPick": { ".validate": "newData.isString() && (!data.exists() || data.val() === '' || data.val() === newData.val())" },
             "joinedAt":     { ".validate": true },
+            "passwordHash": { ".validate": "newData.isString() && newData.val().length === 64 && (!data.exists() || data.val() === newData.val())" },
             "$other": { ".validate": false }
           }
         },

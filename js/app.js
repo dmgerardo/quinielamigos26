@@ -99,6 +99,16 @@ function bindStaticEvents() {
 }
 
 /* ===================== CREAR / UNIRSE ===================== */
+
+// SHA-256 del password + playerKey como sal. Devuelve hex de 64 chars o null si no hay password.
+async function hashPassword(password, playerKey) {
+  if (!password) return null;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + "|" + playerKey);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 function readName() {
   const name = $("#input-name").value.trim();
   if (name.length < 2) { showAuthError("Escribe tu nombre (mín. 2 letras)."); return null; }
@@ -117,6 +127,7 @@ async function handleCreate() {
   const name = readName();
   if (!name) return;
   const tname = $("#input-tname").value.trim() || "Quiniela Mundial 2026";
+  const password = $("#input-password").value;
 
   let code, exists = true, tries = 0;
   do {
@@ -127,15 +138,17 @@ async function handleCreate() {
   state.name = name;
   state.playerKey = makePlayerKey(name, code);
 
+  const pwHash = await hashPassword(password, state.playerKey);
+  const me = { name, championPick: "", joinedAt: firebase.database.ServerValue.TIMESTAMP };
+  if (pwHash) me.passwordHash = pwHash;
+
   const payload = {
     name: tname,
     admin: state.uid,
     adminPlayerKey: state.playerKey,
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     matches: buildInitialMatches(),
-    participants: {
-      [state.playerKey]: { name, championPick: "", joinedAt: firebase.database.ServerValue.TIMESTAMP }
-    }
+    participants: { [state.playerKey]: me }
   };
 
   try {
@@ -158,17 +171,30 @@ async function handleJoin() {
   if (!name) return;
   const code = $("#input-code").value.trim().toUpperCase();
   if (code.length < 4) { showAuthError("Código inválido."); return; }
+  const password = $("#input-password").value;
 
   const snap = await db.ref("tournaments/" + code + "/name").get();
   if (!snap.exists()) { showAuthError("No existe una quiniela con ese código."); return; }
 
   state.name = name;
   state.playerKey = makePlayerKey(name, code);
+
+  // Si el participante ya existe con contraseña, verificar antes de entrar
+  const hashSnap = await db.ref(`tournaments/${code}/participants/${state.playerKey}/passwordHash`).get();
+  const existingHash = hashSnap.val();
+  if (existingHash) {
+    const enteredHash = await hashPassword(password, state.playerKey);
+    if (enteredHash !== existingHash) {
+      showAuthError("Contraseña incorrecta. Ese nombre ya está registrado en esta quiniela.");
+      return;
+    }
+  }
+
   try {
-    await db.ref(`tournaments/${code}/participants/${state.playerKey}`).update({
-      name,
-      joinedAt: firebase.database.ServerValue.TIMESTAMP
-    });
+    const update = { name, joinedAt: firebase.database.ServerValue.TIMESTAMP };
+    // Guardar hash solo si aún no tiene contraseña y el usuario ingresó una
+    if (!existingHash && password) update.passwordHash = await hashPassword(password, state.playerKey);
+    await db.ref(`tournaments/${code}/participants/${state.playerKey}`).update(update);
     await enterTournament(code);
   } catch (e) {
     showAuthError("Error al unirse: " + e.message);
@@ -590,7 +616,9 @@ function renderStats() {
 function renderAdmin() {
   renderRoundFilter("#admin-round-filter", state.adminRound, (r) => { state.adminRound = r; renderAdmin(); });
   const list = $("#admin-list");
-  const matches = matchesArray().filter((m) => m.round === state.adminRound);
+  const matches = matchesArray()
+    .filter((m) => m.round === state.adminRound)
+    .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
   list.innerHTML = "";
   matches.forEach((m) => list.appendChild(adminCard(m)));
   if (!matches.length) list.innerHTML = `<p class="empty">Sin partidos en esta ronda.</p>`;
