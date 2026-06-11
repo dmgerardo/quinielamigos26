@@ -1,0 +1,20 @@
+# Dev / herramientas
+.claude/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Respaldos
+*.bk
+*.bak
+* - Copy*

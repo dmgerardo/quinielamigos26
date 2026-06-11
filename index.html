@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b1437" />
+  <title>Quiniela Mundial 2026 ⚽</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- ====================== LOADER ====================== -->
+  <div id="loader" class="loader">
+    <div class="ball">⚽</div>
+    <p>Cargando…</p>
+  </div>
+
+  <!-- ====================== AUTH / HOME ====================== -->
+  <section id="screen-auth" class="screen">
+    <div class="hero">
+      <div class="hero-badge">⚽ TORNEO 2026</div>
+      <h1>Quiniela<br />Mundial <span>2026</span></h1>
+      <p class="hero-sub">Predice los partidos, compite con tus amigos y conviértete en el campeón de la quiniela.</p>
+    </div>
+
+    <div class="card auth-card">
+      <label class="field">
+        <span>Tu nombre</span>
+        <input id="input-name" type="text" maxlength="20" placeholder="Ej. Gerardo" autocomplete="off" />
+      </label>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="join">Unirme a quiniela</button>
+        <button class="tab" data-tab="create">Crear quiniela</button>
+      </div>
+
+      <!-- Unirse -->
+      <div id="pane-join" class="pane active">
+        <label class="field">
+          <span>Código de invitación</span>
+          <input id="input-code" type="text" maxlength="6" placeholder="Ej. MX2026" class="code-input" autocomplete="off" />
+        </label>
+        <button id="btn-join" class="btn btn-primary">Unirme</button>
+      </div>
+
+      <!-- Crear -->
+      <div id="pane-create" class="pane">
+        <label class="field">
+          <span>Nombre de la quiniela</span>
+          <input id="input-tname" type="text" maxlength="30" placeholder="Ej. Quiniela de la oficina" autocomplete="off" />
+        </label>
+        <button id="btn-create" class="btn btn-primary">Crear quiniela</button>
+        <p class="hint">Tú serás el administrador y podrás cargar los resultados reales.</p>
+      </div>
+    </div>
+    <p class="error" id="auth-error"></p>
+  </section>
+
+  <!-- ====================== APP ====================== -->
+  <section id="screen-app" class="screen hidden">
+    <header class="topbar">
+      <div class="topbar-info">
+        <strong id="t-name">—</strong>
+        <button id="t-code-chip" class="code-chip" title="Compartir código">#<span id="t-code">——</span> <span class="copy-ic">⧉</span></button>
+      </div>
+      <div class="topbar-user">
+        <span id="u-name" class="user-pill">—</span>
+        <button id="btn-logout" class="icon-btn" title="Salir">⎋</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- TAB: Partidos -->
+      <div id="view-matches" class="view active">
+        <div class="round-filter" id="round-filter"></div>
+        <div id="matches-list" class="matches-list"></div>
+      </div>
+
+      <!-- TAB: Ranking -->
+      <div id="view-ranking" class="view">
+        <div class="champion-banner" id="champion-banner"></div>
+        <ol id="ranking-list" class="ranking-list"></ol>
+      </div>
+
+      <!-- TAB: Estadísticas -->
+      <div id="view-stats" class="view">
+        <div id="stats-content" class="stats-content"></div>
+      </div>
+
+      <!-- TAB: Admin -->
+      <div id="view-admin" class="view">
+        <div class="admin-note card">
+          <strong>Panel de administración</strong>
+          <p>Ingresa el resultado real de cada partido. Las puntuaciones se recalculan automáticamente para todos.</p>
+        </div>
+        <div class="round-filter" id="admin-round-filter"></div>
+        <div id="admin-list" class="matches-list"></div>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-view="matches"><span>🎯</span>Partidos</button>
+      <button class="nav-btn" data-view="ranking"><span>🏆</span>Ranking</button>
+      <button class="nav-btn" data-view="stats"><span>📊</span>Stats</button>
+      <button class="nav-btn admin-only hidden" data-view="admin"><span>⚙️</span>Admin</button>
+    </nav>
+  </section>
+
+  <!-- ====================== MODAL PREDICCIÓN ====================== -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" id="modal-card"></div>
+  </div>
+
+  <!-- ====================== TOAST ====================== -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/tournament-data.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{
+  "rules": {
+    "tournaments": {
+      "$code": {
+        ".read": "auth != null",
+
+        ".write": "auth != null && !data.exists() && newData.child('admin').val() === auth.uid",
+
+        "name": {
+          ".write": "auth != null && root.child('tournaments').child($code).child('admin').val() === auth.uid",
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40"
+        },
+
+        "createdAt": { ".validate": true },
+
+        "admin": {
+          ".validate": "newData.val() === auth.uid"
+        },
+
+        "participants": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            "name":         { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20" },
+            "championPick": { ".validate": "newData.isString()" },
+            "joinedAt":     { ".validate": true },
+            "$other": { ".validate": false }
+          }
+        },
+
+        "matches": {
+          ".write": "auth != null && root.child('tournaments').child($code).child('admin').val() === auth.uid",
+          "$matchId": {
+            "realA":  { ".validate": "newData.val() === null || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 30)" },
+            "realB":  { ".validate": "newData.val() === null || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 30)" },
+            "played": { ".validate": "newData.isBoolean()" }
+          }
+        },
+
+        "predictions": {
+          "$matchId": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && root.child('tournaments').child($code).child('matches').child($matchId).child('played').val() !== true",
+              "a":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+              "b":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
+              "at": { ".validate": true },
+              "$other": { ".validate": false }
+            }
+          }
+        }
+      }
+    }
+  }
+}
