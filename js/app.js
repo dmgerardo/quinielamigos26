@@ -62,6 +62,7 @@ async function init() {
   const hist = loadHistory();
   if (hist.length && !$("#input-name").value) $("#input-name").value = hist[0].name;
   showScreen("auth");
+  loadPublicTournaments();
 }
 
 /* ===================== EVENTOS ESTÁTICOS ===================== */
@@ -133,6 +134,12 @@ async function handleCreate() {
 
   try {
     await db.ref("tournaments/" + code).set(payload);
+    // Publica el torneo en el índice público para que otros lo vean en la lista
+    await db.ref("publicTournaments/" + code).set({
+      name: tname,
+      adminName: name,
+      createdAt: firebase.database.ServerValue.TIMESTAMP
+    });
     await enterTournament(code);
   } catch (e) {
     showAuthError("Error al crear: " + e.message);
@@ -807,6 +814,44 @@ async function shareCode() {
   }
   try { await navigator.clipboard.writeText(text); toast("Invitación copiada ✓"); }
   catch (_) { toast("Código: " + state.code); }
+}
+
+/* ===================== LISTA PÚBLICA DE QUINIELAS ===================== */
+async function loadPublicTournaments() {
+  const el = $("#public-list");
+  if (!el) return;
+  el.innerHTML = `<p class="public-loading">Cargando quinielas…</p>`;
+  try {
+    const snap = await db.ref("publicTournaments")
+      .orderByChild("createdAt").limitToLast(30).get();
+
+    if (!snap.exists()) {
+      el.innerHTML = `<p class="public-empty">No hay quinielas disponibles aún. ¡Crea la primera!</p>`;
+      return;
+    }
+
+    const items = [];
+    snap.forEach((c) => items.unshift({ code: c.key, ...c.val() }));
+
+    el.innerHTML = `
+      <p class="public-hint">Elige una quiniela para unirte:</p>
+      ${items.map((t) => `
+        <button class="public-item" data-code="${t.code}">
+          <span class="public-name">${t.name}</span>
+          <span class="public-meta">por ${t.adminName} · #${t.code}</span>
+        </button>`).join("")}`;
+
+    $$(".public-item", el).forEach((b) =>
+      b.addEventListener("click", () => {
+        $("#input-code").value = b.dataset.code;
+        $$(".public-item", el).forEach((x) => x.classList.remove("selected"));
+        b.classList.add("selected");
+        $("#input-code").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      })
+    );
+  } catch (_) {
+    el.innerHTML = `<p class="public-empty">No se pudo cargar la lista.</p>`;
+  }
 }
 
 /* ===================== HISTORIAL "MIS QUINIELAS" ===================== */
