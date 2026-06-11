@@ -1,0 +1,23 @@
+#!/bin/sh
+# Hook pre-commit: si hay cambios en CSS o JS, sube la versión de
+# cache-busting (?v=N) en index.html para que los navegadores bajen
+# la última versión tras desplegar. Se activa con:
+#   git config core.hooksPath .githooks
+#
+# Solo corre el bump cuando el commit incluye archivos .css / .js.
+
+changed=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(css|js)$')
+
+if [ -n "$changed" ]; then
+  if command -v python >/dev/null 2>&1; then
+    python scripts/bump-version.py
+  elif command -v py >/dev/null 2>&1; then
+    py scripts/bump-version.py
+  else
+    echo "pre-commit: no se encontró python; se omite el bump de versión." >&2
+    exit 0
+  fi
+  git add index.html
+fi
+
+exit 0

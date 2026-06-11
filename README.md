@@ -124,4 +124,21 @@ tournaments/
 - **Puntos**: ajusta `POINTS_RESULT`, `POINTS_EXACT`, `CHAMPION_POINTS` en `js/scoring.js`.
 - **Colores/tema**: variables CSS en `:root` dentro de `css/styles.css`.
 
+---
+
+## 🔄 Cache-busting automático (para que los cambios lleguen a todos)
+
+Los navegadores (sobre todo en móviles) cachean los `.css` y `.js` de forma agresiva. Para que cada despliegue llegue a todos sin tener que limpiar caché, los assets se cargan con una versión: `js/app.js?v=N`.
+
+Ese número **se incrementa solo** en cada commit que toque CSS o JS, mediante un hook de git:
+
+- `scripts/bump-version.py` — sube el `?v=N` en `index.html`.
+- `.githooks/pre-commit` — lo ejecuta antes de cada commit con cambios en `.css`/`.js` y vuelve a agregar `index.html`.
+
+**Activación (una sola vez por clon del repo):**
+```bash
+git config core.hooksPath .githooks
+```
+Después, solo trabaja normal: cada `git commit` con cambios de CSS/JS subirá la versión automáticamente. (Requiere `python` en el PATH.)
+
 ¡Que gane el mejor pronosticador! 🏆
