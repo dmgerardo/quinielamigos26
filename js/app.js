@@ -80,6 +80,7 @@ function bindStaticEvents() {
   $("#btn-join").addEventListener("click", handleJoin);
   $("#btn-logout").addEventListener("click", logout);
   $("#t-code-chip").addEventListener("click", shareCode);
+  $("#btn-report").addEventListener("click", openAdminReport);
 
   // Navegación inferior
   $$(".nav-btn").forEach((b) =>
@@ -656,6 +657,99 @@ function adminEditTeams(matchId) {
     closeModal(); toast("Equipos actualizados ✓");
   });
   $("#cancel-teams").addEventListener("click", closeModal);
+  openModal();
+}
+
+/* ---------- Reporte admin ---------- */
+function openAdminReport() {
+  const matches = matchesArray();
+  const parts = state.data.participants || {};
+  const realChamp = getRealChampion(state.data.matches || {});
+
+  // Calcular puntuaciones y ordenar por pts desc
+  const pids = Object.keys(parts);
+  const scored = pids.map((pid) => {
+    const s = computeUserScore(state.data.matches || {}, predForView(pid), parts[pid].championPick, realChamp);
+    const predCount = Object.keys(predForView(pid)).length;
+    return { pid, name: parts[pid].name, champ: parts[pid].championPick || "—", predCount, ...s };
+  });
+  scored.sort((a, b) => b.total - a.total || b.exact - a.exact || a.name.localeCompare(b.name));
+
+  const predectable = matches.filter(
+    (m) => m.teamA.name !== "Por definir" && m.teamB.name !== "Por definir"
+  ).length;
+
+  // Fila de la tabla resumen
+  const tableRows = scored.map((r, i) => {
+    const isAdm = r.pid === state.data.adminPlayerKey;
+    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1;
+    return `<tr>
+      <td class="rp-name">${medal} ${r.name}${isAdm ? ' <span class="admin-tag" style="font-size:10px">A</span>' : ""}</td>
+      <td class="rp-num">${r.total}</td>
+      <td class="rp-num">${r.correct}</td>
+      <td class="rp-num">${r.exact}</td>
+      <td class="rp-champ">${r.champ}</td>
+      <td class="rp-num">${r.predCount}/${predectable}</td>
+    </tr>`;
+  }).join("");
+
+  // Detalle por partido (jugados o cerrados)
+  const closedMatches = matches.filter((m) => m.played || isLocked(m))
+    .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
+
+  const matchBlocks = closedMatches.length
+    ? closedMatches.map((m) => {
+        const predRows = scored.map((r) => {
+          const pred = predForView(r.pid)[m.id];
+          const pts = pred && m.played ? scoreMatch(pred, m.realA, m.realB) : null;
+          return `<div class="rp-pred-row">
+            <span class="rp-pred-name">${r.name}</span>
+            <span class="rp-pred-val">
+              ${pred ? `${pred.a}–${pred.b}` : '<span style="color:var(--muted)">—</span>'}
+              ${pts != null ? `<b class="rp-pts ${pts > 0 ? "pos" : "zero"}">+${pts}</b>` : ""}
+            </span>
+          </div>`;
+        }).join("");
+        const resultLabel = m.played
+          ? `<b>${m.realA}–${m.realB}</b>`
+          : `<span style="color:var(--gold);font-size:11px">CERRADO</span>`;
+        return `<div class="rp-match">
+          <div class="rp-match-hdr">
+            <span>${m.teamA.flag} ${teamName(m.teamA, m.slotA)} ${resultLabel} ${teamName(m.teamB, m.slotB)} ${m.teamB.flag}</span>
+            <span class="rp-round">${roundLabel(m.round)}${m.group ? " · Grp " + m.group : ""}</span>
+          </div>
+          ${predRows}
+        </div>`;
+      }).join("")
+    : `<p class="empty">Sin partidos jugados o cerrados aún.</p>`;
+
+  $("#modal-card").innerHTML = `
+    <div class="modal-title">📋 Reporte de participantes</div>
+    <div class="modal-sub">${state.data.name || state.code} · ${scored.length} participante${scored.length !== 1 ? "s" : ""}</div>
+    <div class="rp-scroll">
+      <div class="rp-table-wrap">
+        <table class="rp-table">
+          <thead>
+            <tr>
+              <th class="rp-name">Participante</th>
+              <th class="rp-num">Pts</th>
+              <th class="rp-num">Ac.</th>
+              <th class="rp-num">Ex.</th>
+              <th class="rp-champ">Campeón</th>
+              <th class="rp-num">Preds.</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      <div class="section-title" style="margin:18px 0 10px">Predicciones por partido</div>
+      <div class="rp-matches">${matchBlocks}</div>
+    </div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-ghost" id="close-report">Cerrar</button>
+    </div>
+  `;
+  $("#close-report").addEventListener("click", closeModal);
   openModal();
 }
 

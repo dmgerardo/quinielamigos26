@@ -331,3 +331,34 @@ input { font-family: inherit; }
 .admin-note { margin-bottom: 14px; }
 .admin-note p { font-size: 13px; color: var(--muted); margin-top: 6px; }
 .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; }
+
+/* ===================== REPORTE ADMIN ===================== */
+.rp-scroll { max-height: 62vh; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 2px; }
+.rp-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--line); }
+.rp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rp-table thead tr { background: var(--card-2); }
+.rp-table th { padding: 9px 10px; font-size: 11px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.rp-table td { padding: 9px 10px; border-top: 1px solid var(--line); vertical-align: middle; }
+.rp-table tbody tr:hover { background: rgba(255,255,255,.03); }
+th.rp-name, td.rp-name { text-align: left; min-width: 110px; font-weight: 600; }
+th.rp-num,  td.rp-num  { text-align: right; white-space: nowrap; }
+th.rp-champ,td.rp-champ{ text-align: left; font-size: 12px; color: var(--muted); min-width: 90px; }
+.rp-matches { display: flex; flex-direction: column; gap: 10px; }
+.rp-match {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+}
+.rp-match-hdr {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 8px; font-size: 13px; font-weight: 700; margin-bottom: 10px; flex-wrap: wrap;
+}
+.rp-round { font-size: 11px; color: var(--muted); font-weight: 500; white-space: nowrap; }
+.rp-pred-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; border-top: 1px solid rgba(255,255,255,.05); font-size: 13px;
+}
+.rp-pred-name { color: var(--muted); }
+.rp-pred-val  { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.rp-pts { font-size: 12px; font-weight: 800; padding: 2px 6px; border-radius: 999px; }
+.rp-pts.pos  { background: rgba(20,224,163,.15); color: var(--accent); }
+.rp-pts.zero { background: rgba(255,255,255,.07); color: var(--muted); }
