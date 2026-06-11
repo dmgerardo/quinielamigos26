@@ -14,9 +14,12 @@ Aplicación web para hacer una quiniela del torneo de fútbol 2026 con tus amigo
 - **Login simple** con tu nombre (sin contraseña; identidad anónima de Firebase).
 - **Fase de grupos** (12 grupos × 4 equipos = 72 partidos) **+ eliminatorias** (16avos, octavos, cuartos, semis, 3er lugar y final) — formato real del Mundial 2026 de 48 equipos.
 - **Predicciones** con marcador exacto por partido.
-- **Campeón mundial**: elige tu campeón antes de que arranque el torneo para un bonus extra.
+- **Cierre anti-trampa**: cada partido se bloquea **1 hora antes** de su inicio; ya no se puede crear ni editar la predicción (validado también en el servidor).
+- **Campeón mundial**: elige tu campeón antes de que arranque el torneo para un bonus extra. La elección es **definitiva** (no se puede cambiar; reforzado en las reglas de Firebase).
 - **Ranking en tiempo real**: cambia al instante para todos cuando el admin carga un resultado.
 - **Estadísticas individuales**: puntos totales, efectividad, aciertos, marcadores exactos y puntos por ronda.
+- **Mis quinielas**: tus quinielas se recuerdan en el dispositivo; en la pantalla de inicio aparece una lista para reingresar con un toque, sin recordar el código.
+- **Página de reglas** (`reglas.html`) clara para cada participante, enlazada desde el inicio y la barra superior.
 - **Panel de admin**: cargar resultados reales y definir los equipos de eliminatorias.
 - **Diseño mobile-first** responsivo para iPhone y Android.
 

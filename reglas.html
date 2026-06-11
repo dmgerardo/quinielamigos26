@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1437" />
+  <title>Reglas · Quiniela Mundial 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .reglas { max-width: 640px; margin: 0 auto; padding: 24px 18px 60px; }
+    .reglas h1 { font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+    .reglas h1 span { color: var(--primary); }
+    .reglas .lead { color: var(--muted); margin: 8px 0 22px; font-size: 15px; }
+    .rule-card {
+      background: linear-gradient(180deg, var(--card) 0%, var(--bg-2) 100%);
+      border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 18px 18px; margin-bottom: 14px;
+    }
+    .rule-card h2 { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+    .rule-card p, .rule-card li { color: #d6ddff; font-size: 14.5px; line-height: 1.55; }
+    .rule-card ul, .rule-card ol { margin: 10px 0 0 18px; display: flex; flex-direction: column; gap: 7px; }
+    .rule-card .note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+    table.pts { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    table.pts th, table.pts td { text-align: left; padding: 10px 12px; font-size: 14px; border-bottom: 1px solid var(--line); }
+    table.pts th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+    table.pts td.pts-val { text-align: right; font-weight: 800; color: var(--accent); white-space: nowrap; }
+    .pill {
+      display: inline-block; background: rgba(255,211,61,.14); color: var(--gold);
+      border: 1px solid rgba(255,211,61,.35); border-radius: 999px; padding: 2px 10px;
+      font-size: 12px; font-weight: 700; margin-left: 6px;
+    }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 8px; color: var(--text);
+      background: var(--card-2); border: 1px solid var(--line); border-radius: 12px;
+      padding: 11px 16px; text-decoration: none; font-weight: 700; font-size: 15px; margin-top: 8px;
+    }
+    .ex { background: #0e1840; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-top: 10px; font-size: 13.5px; color: #cfd6f0; }
+    .ex b { color: var(--accent); }
+    .disc { color: var(--muted); font-size: 12px; text-align: center; margin-top: 22px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="reglas">
+    <div class="hero-badge" style="display:inline-block;color:var(--gold);border:1px solid rgba(255,211,61,.4);border-radius:999px;padding:5px 14px;font-size:11px;letter-spacing:3px;font-weight:700;margin-bottom:14px;">⚽ REGLAS</div>
+    <h1>Quiniela <span>Mundial 2026</span></h1>
+    <p class="lead">Todo lo que necesitas saber para competir. ¡Que gane quien más sepa de fútbol… y un poco de suerte!</p>
+
+    <div class="rule-card">
+      <h2>🎯 Cómo funciona</h2>
+      <ol>
+        <li>Entra con tu <b>nombre</b> y únete a la quiniela con el <b>código</b> que te compartieron (o el enlace de invitación).</li>
+        <li>En la pestaña <b>Partidos</b>, predice el <b>marcador exacto</b> de cada juego: cuántos goles mete cada selección.</li>
+        <li>Elige tu <b>Campeón del Mundo</b> en la pestaña <b>Ranking</b> antes de que arranque el torneo.</li>
+        <li>El <b>administrador</b> carga los resultados reales conforme se juegan, y tus puntos y el <b>ranking se actualizan solos, en vivo</b>.</li>
+      </ol>
+    </div>
+
+    <div class="rule-card">
+      <h2>🏆 Puntuación</h2>
+      <p><b>1) Aciertos de cada partido</b> (máximo 4 puntos por juego):</p>
+      <table class="pts">
+        <tr><th>Si aciertas…</th><th style="text-align:right">Puntos</th></tr>
+        <tr><td>El resultado (gana A, gana B o empate)</td><td class="pts-val">+3</td></tr>
+        <tr><td>Además el marcador exacto de ambos equipos</td><td class="pts-val">+1</td></tr>
+        <tr><td><b>Máximo por partido</b></td><td class="pts-val">4</td></tr>
+      </table>
+      <div class="ex">
+        Ejemplo: el marcador real es <b>México 2 – 1 Sudáfrica</b>.<br>
+        • Predijiste 1–0 (gana México): aciertas el ganador → <b>+3</b><br>
+        • Predijiste 2–1 (marcador exacto): ganador + marcador → <b>+4</b><br>
+        • Predijiste 0–2 (gana Sudáfrica): fallaste → <b>0</b>
+      </div>
+      <p style="margin-top:16px"><b>2) Campeón del Mundo</b> <span class="pill">+15 pts</span></p>
+      <p>Si la selección que elegiste como campeón <b>gana la final</b>, sumas <b>15 puntos</b> extra al final del torneo.</p>
+    </div>
+
+    <div class="rule-card">
+      <h2>⏱️ Cierre de predicciones</h2>
+      <p>Para evitar trampas, cada partido se <b>cierra automáticamente 1 hora antes</b> de su inicio. A partir de ese momento <b>ya no puedes crear ni editar</b> tu predicción de ese juego (aparece como <b>CERRADO</b>).</p>
+      <p class="note">Consejo: haz tus predicciones con tiempo. Las del primer partido cierran 1 h antes del silbatazo inicial.</p>
+    </div>
+
+    <div class="rule-card">
+      <h2>👑 Elección de campeón: definitiva</h2>
+      <p>Tu <b>Campeón del Mundo</b> se elige <b>una sola vez</b> y <b>no se puede cambiar</b>. Asegúrate de tu pick antes de confirmarlo; debe hacerse antes de que inicie el torneo.</p>
+    </div>
+
+    <div class="rule-card">
+      <h2>🗓️ Formato del torneo</h2>
+      <ul>
+        <li><b>Fase de grupos:</b> 12 grupos (A–L) de 4 selecciones, todos contra todos.</li>
+        <li><b>Eliminatorias:</b> 16avos, octavos, cuartos, semifinales, 3er lugar y final.</li>
+        <li>En eliminatorias, mientras no se definan los clasificados verás el cupo (ej. <b>"1º Grupo A"</b>, <b>"Mejor 3º"</b>, <b>"Ganador #74"</b>). Podrás predecir esos partidos cuando el admin cargue los equipos reales.</li>
+      </ul>
+    </div>
+
+    <div class="rule-card">
+      <h2>🕒 Horarios</h2>
+      <p>Las fechas y horas de cada partido se muestran <b>en tu zona horaria local</b> automáticamente, así que no tienes que hacer conversiones.</p>
+    </div>
+
+    <div class="rule-card">
+      <h2>📊 Ranking y estadísticas</h2>
+      <ul>
+        <li>El <b>ranking</b> ordena por puntos totales; en empate, desempata quien tenga más marcadores exactos.</li>
+        <li>En <b>Stats</b> ves tu efectividad, aciertos, marcadores exactos y puntos por ronda.</li>
+        <li>Todo es <b>en tiempo real</b>: cuando el admin carga un resultado, todos ven el cambio al instante.</li>
+      </ul>
+    </div>
+
+    <a href="index.html" class="back-link">← Volver a la quiniela</a>
+
+    <p class="disc">Proyecto personal sin fines comerciales y sin afiliación, patrocinio ni licencia de la FIFA ni de ningún organismo oficial. Los nombres de selecciones y banderas son de uso meramente informativo.</p>
+  </div>
+</body>
+</html>

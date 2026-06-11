@@ -6,7 +6,7 @@
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-const LS_KEY = "quiniela2026_session";
+const HISTORY_KEY = "quiniela2026_history"; // lista de quinielas en las que participo
 
 const state = {
   uid: null,
@@ -44,17 +44,11 @@ async function init() {
     return;
   }
 
-  // ¿Sesión guardada? -> reentrar automáticamente
-  const saved = loadSession();
-  if (saved && saved.code && saved.name) {
-    state.name = saved.name;
-    try {
-      await enterTournament(saved.code);
-      return;
-    } catch (_) { clearSession(); }
-  }
-
+  // Mostrar la pantalla de inicio con la lista "Mis quinielas".
   hideLoader();
+  renderHistory();
+  const hist = loadHistory();
+  if (hist.length && !$("#input-name").value) $("#input-name").value = hist[0].name;
   showScreen("auth");
 }
 
@@ -173,9 +167,9 @@ function enterTournament(code) {
         if (!state.data.participants || !state.data.participants[state.uid]) {
           if (first) { reject(new Error("No inscrito")); return; }
         }
-        saveSession();
         if (first) {
           first = false;
+          addHistory(code, state.data.name, state.name);
           hideLoader();
           showScreen("app");
           $("#t-name").textContent = state.data.name;
@@ -247,8 +241,14 @@ function renderMatches() {
   });
 }
 
+// Las predicciones se cierran 1 hora antes del inicio del partido (anti-trampa).
+const LOCK_BEFORE_MS = 60 * 60 * 1000;
+function lockTime(m) { return typeof m.kickoffMs === "number" ? m.kickoffMs - LOCK_BEFORE_MS : Infinity; }
+function isLocked(m) { return m.played || Date.now() >= lockTime(m); }
+
 function statusBadge(m) {
   if (m.played) return `<span class="match-status status-final">FINAL</span>`;
+  if (Date.now() >= lockTime(m)) return `<span class="match-status status-locked">CERRADO</span>`;
   return `<span class="match-status status-open">ABIERTO</span>`;
 }
 
@@ -275,7 +275,7 @@ function metaLine(m) {
 function matchCard(m, pred) {
   const el = document.createElement("div");
   el.className = "match";
-  const locked = m.played;
+  const locked = isLocked(m);
   const pts = m.played && pred ? scoreMatch(pred, m.realA, m.realB) : null;
 
   let realRow = "";
@@ -326,6 +326,9 @@ function openPrediction(matchId) {
   const m = state.data.matches[matchId];
   if (m.teamA.name === "Por definir" || m.teamB.name === "Por definir") {
     toast("Equipos por definir — disponible cuando el admin los cargue", true); return;
+  }
+  if (isLocked(m)) {
+    toast("⏱️ Cerrado: las predicciones se bloquean 1 h antes del partido", true); return;
   }
   const existing = myPreds()[matchId];
   modalScore = { a: existing ? existing.a : 0, b: existing ? existing.b : 0, matchId };
@@ -380,6 +383,7 @@ function updateWinnerTag(m) {
 }
 
 async function savePrediction(m) {
+  if (isLocked(m)) { toast("⏱️ Este partido ya está cerrado", true); closeModal(); return; }
   try {
     await db.ref(`tournaments/${state.code}/predictions/${m.id}/${state.uid}`).set({
       a: modalScore.a, b: modalScore.b, at: firebase.database.ServerValue.TIMESTAMP
@@ -406,18 +410,17 @@ function renderRanking() {
   // banner campeón
   const banner = $("#champion-banner");
   const myPick = parts[state.uid] && parts[state.uid].championPick;
+  banner.className = "champion-banner show";
   if (realChamp) {
-    banner.className = "champion-banner show";
     banner.innerHTML = `🏆 Campeón del torneo: <b>${realChamp}</b> · quienes lo eligieron ganaron +${CHAMPION_POINTS} pts.`;
+  } else if (myPick) {
+    // Ya eligió: la elección de campeón NO se puede cambiar.
+    banner.innerHTML = `🏆 Tu campeón: <b>${myPick}</b> 🔒 (+${CHAMPION_POINTS} pts si acierta). Esta elección es definitiva.`;
   } else {
-    banner.className = "champion-banner show";
-    banner.innerHTML = myPick
-      ? `🏆 Tu campeón: <b>${myPick}</b> (+${CHAMPION_POINTS} pts si acierta). <a href="#" id="change-champ" style="color:var(--accent)">Cambiar</a>`
-      : `🏆 Aún no eliges campeón mundial (+${CHAMPION_POINTS} pts). <a href="#" id="change-champ" style="color:var(--accent)">Elegir ahora</a>`;
-    const lockChamp = anyMatchPlayed();
+    banner.innerHTML = `🏆 Aún no eliges campeón mundial (+${CHAMPION_POINTS} pts). <a href="#" id="change-champ" style="color:var(--accent)">Elegir ahora</a>`;
     const link = $("#change-champ");
     if (link) {
-      if (lockChamp) { link.replaceWith(document.createTextNode(" (bloqueado: el torneo ya inició)")); }
+      if (anyMatchPlayed()) link.replaceWith(document.createTextNode(" (bloqueado: el torneo ya inició)"));
       else link.addEventListener("click", (e) => { e.preventDefault(); openChampionPicker(); });
     }
   }
@@ -453,7 +456,7 @@ function openChampionPicker() {
   const current = (state.data.participants[state.uid] || {}).championPick || "";
   $("#modal-card").innerHTML = `
     <div class="modal-title">🏆 Elige al campeón</div>
-    <div class="modal-sub">Ganarás +${CHAMPION_POINTS} pts si tu equipo gana el Mundial. Solo puedes elegir antes de que inicie el torneo.</div>
+    <div class="modal-sub">Ganarás +${CHAMPION_POINTS} pts si tu equipo gana el Mundial. ⚠️ Solo puedes elegir <b>una vez</b> y <b>no se puede cambiar</b>; debe ser antes de que inicie el torneo.</div>
     <div class="champ-picker">
       <select class="champ-select" id="champ-select">
         <option value="">— Selecciona un equipo —</option>
@@ -468,6 +471,7 @@ function openChampionPicker() {
   $("#save-champ").addEventListener("click", async () => {
     const val = $("#champ-select").value;
     if (!val) { toast("Selecciona un equipo", true); return; }
+    if (current) { toast("Ya elegiste campeón; no se puede cambiar", true); closeModal(); return; }
     if (anyMatchPlayed()) { toast("El torneo ya inició", true); closeModal(); return; }
     await db.ref(`tournaments/${state.code}/participants/${state.uid}/championPick`).set(val);
     closeModal(); toast("Campeón guardado 🏆");
@@ -633,6 +637,7 @@ function showScreen(name) {
 function openModal() { $("#modal").classList.remove("hidden"); }
 function closeModal() { $("#modal").classList.add("hidden"); }
 
+function showLoader() { $("#loader").classList.remove("hidden"); }
 function hideLoader() { $("#loader").classList.add("hidden"); }
 function showAuthError(msg) { $("#auth-error").textContent = msg; }
 
@@ -655,15 +660,58 @@ async function shareCode() {
   catch (_) { toast("Código: " + state.code); }
 }
 
-/* ===================== SESIÓN ===================== */
-function saveSession() { localStorage.setItem(LS_KEY, JSON.stringify({ code: state.code, name: state.name })); }
-function loadSession() { try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch (_) { return null; } }
-function clearSession() { localStorage.removeItem(LS_KEY); }
+/* ===================== HISTORIAL "MIS QUINIELAS" ===================== */
+function loadHistory() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch (_) { return []; } }
+function saveHistory(arr) { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0, 20))); }
+function addHistory(code, tname, name) {
+  const arr = loadHistory().filter((x) => x.code !== code);
+  arr.unshift({ code, tname, name, ts: Date.now() });
+  saveHistory(arr);
+}
+function removeHistory(code) { saveHistory(loadHistory().filter((x) => x.code !== code)); }
+
+function renderHistory() {
+  const arr = loadHistory();
+  const sec = $("#history-section");
+  const list = $("#history-list");
+  if (!arr.length) { sec.classList.add("hidden"); return; }
+  sec.classList.remove("hidden");
+  list.innerHTML = "";
+  arr.forEach((h) => {
+    const item = document.createElement("div");
+    item.className = "hist-item";
+    item.innerHTML = `
+      <button class="hist-enter" data-code="${h.code}">
+        <span class="hist-name">${h.tname || "Quiniela"}</span>
+        <span class="hist-meta">#${h.code} · como ${h.name}</span>
+      </button>
+      <button class="hist-del" data-code="${h.code}" title="Quitar de la lista">✕</button>`;
+    list.appendChild(item);
+  });
+  $$(".hist-enter").forEach((b) => b.addEventListener("click", () => quickEnter(b.dataset.code)));
+  $$(".hist-del").forEach((b) =>
+    b.addEventListener("click", () => { removeHistory(b.dataset.code); renderHistory(); })
+  );
+}
+
+async function quickEnter(code) {
+  const h = loadHistory().find((x) => x.code === code);
+  if (!h) return;
+  state.name = h.name;
+  showLoader();
+  try {
+    await enterTournament(code);
+  } catch (e) {
+    hideLoader();
+    showScreen("auth");
+    toast("No se pudo abrir #" + code + ": " + (e.message || "error"), true);
+  }
+}
 
 function logout() {
   if (state.ref) state.ref.off();
-  clearSession();
   state.code = null; state.data = null; state.ref = null;
   showScreen("auth");
   $("#input-code").value = "";
+  renderHistory(); // la lista se conserva para reingresar fácil
 }

@@ -7,7 +7,7 @@
   <title>Quiniela Mundial 2026 ⚽</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=3" />
+  <link rel="stylesheet" href="css/styles.css?v=4" />
 </head>
 <body>
   <!-- ====================== LOADER ====================== -->
@@ -22,6 +22,12 @@
       <div class="hero-badge">⚽ TORNEO 2026</div>
       <h1>Quiniela<br />Mundial <span>2026</span></h1>
       <p class="hero-sub">Predice los partidos, compite con tus amigos y conviértete en el campeón de la quiniela.</p>
+    </div>
+
+    <!-- Mis quinielas (historial local) -->
+    <div id="history-section" class="card history-card hidden">
+      <div class="history-title">📋 Mis quinielas</div>
+      <div id="history-list" class="history-list"></div>
     </div>
 
     <div class="card auth-card">
@@ -55,6 +61,7 @@
       </div>
     </div>
     <p class="error" id="auth-error"></p>
+    <a href="reglas.html" target="_blank" rel="noopener" class="rules-link">📖 Ver reglas y sistema de puntuación</a>
   </section>
 
   <!-- ====================== APP ====================== -->
@@ -66,6 +73,7 @@
       </div>
       <div class="topbar-user">
         <span id="u-name" class="user-pill">—</span>
+        <a href="reglas.html" target="_blank" rel="noopener" class="icon-btn" title="Reglas">📖</a>
         <button id="btn-logout" class="icon-btn" title="Salir">⎋</button>
       </div>
     </header>
@@ -121,9 +129,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
-  <script src="js/firebase-config.js?v=3"></script>
-  <script src="js/tournament-data.js?v=3"></script>
-  <script src="js/scoring.js?v=3"></script>
-  <script src="js/app.js?v=3"></script>
+  <script src="js/firebase-config.js?v=4"></script>
+  <script src="js/tournament-data.js?v=4"></script>
+  <script src="js/scoring.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>

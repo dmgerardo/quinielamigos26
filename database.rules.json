@@ -21,7 +21,7 @@
           "$uid": {
             ".write": "auth != null && auth.uid === $uid",
             "name":         { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20" },
-            "championPick": { ".validate": "newData.isString()" },
+            "championPick": { ".validate": "newData.isString() && (!data.exists() || data.val() === '' || data.val() === newData.val())" },
             "joinedAt":     { ".validate": true },
             "$other": { ".validate": false }
           }
@@ -39,7 +39,7 @@
         "predictions": {
           "$matchId": {
             "$uid": {
-              ".write": "auth != null && auth.uid === $uid && root.child('tournaments').child($code).child('matches').child($matchId).child('played').val() !== true",
+              ".write": "auth != null && auth.uid === $uid && root.child('tournaments').child($code).child('matches').child($matchId).child('played').val() !== true && now < root.child('tournaments').child($code).child('matches').child($matchId).child('kickoffMs').val() - 3600000",
               "a":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
               "b":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
               "at": { ".validate": true },
