@@ -252,6 +252,16 @@ function statusBadge(m) {
   return `<span class="match-status status-open">ABIERTO</span>`;
 }
 
+// Para eliminatorias sin equipos definidos, muestra el descriptor de
+// clasificación (slot) en vez de "Por definir".
+function teamName(team, slot) {
+  return (team.name === "Por definir" && slot) ? slot : team.name;
+}
+function metaLine(m) {
+  return `${roundLabel(m.round)}${m.group ? " · Grupo " + m.group : ""}` +
+         `${m.date ? " · " + m.date : ""}${m.venue ? " · 📍 " + m.venue : ""}`;
+}
+
 function matchCard(m, pred) {
   const el = document.createElement("div");
   el.className = "match";
@@ -280,13 +290,13 @@ function matchCard(m, pred) {
 
   el.innerHTML = `
     <div class="match-top">
-      <span class="match-meta">${roundLabel(m.round)}${m.group ? " · Grupo " + m.group : ""}${m.date ? " · " + m.date : ""}</span>
+      <span class="match-meta">${metaLine(m)}</span>
       ${statusBadge(m)}
     </div>
     <div class="teams-row">
-      <div class="team"><span class="flag">${m.teamA.flag}</span><span class="tname">${m.teamA.name}</span></div>
+      <div class="team"><span class="flag">${m.teamA.flag}</span><span class="tname">${teamName(m.teamA, m.slotA)}</span></div>
       <span class="vs">VS</span>
-      <div class="team"><span class="flag">${m.teamB.flag}</span><span class="tname">${m.teamB.name}</span></div>
+      <div class="team"><span class="flag">${m.teamB.flag}</span><span class="tname">${teamName(m.teamB, m.slotB)}</span></div>
     </div>
     ${realRow}
     ${predRow}
@@ -305,7 +315,7 @@ let modalScore = { a: 0, b: 0, matchId: null };
 function openPrediction(matchId) {
   const m = state.data.matches[matchId];
   if (m.teamA.name === "Por definir" || m.teamB.name === "Por definir") {
-    toast("Equipos aún por definir", true); return;
+    toast("Equipos por definir — disponible cuando el admin los cargue", true); return;
   }
   const existing = myPreds()[matchId];
   modalScore = { a: existing ? existing.a : 0, b: existing ? existing.b : 0, matchId };
@@ -509,13 +519,13 @@ function adminCard(m) {
   const editable = m.editable; // eliminatorias: permitir editar nombres
   el.innerHTML = `
     <div class="match-top">
-      <span class="match-meta">${roundLabel(m.round)}${m.group ? " · Grupo " + m.group : ""}</span>
+      <span class="match-meta">${metaLine(m)}</span>
       ${statusBadge(m)}
     </div>
     <div class="teams-row">
-      <div class="team"><span class="flag">${m.teamA.flag}</span><span class="tname">${m.teamA.name}</span></div>
+      <div class="team"><span class="flag">${m.teamA.flag}</span><span class="tname">${teamName(m.teamA, m.slotA)}</span></div>
       <span class="vs">VS</span>
-      <div class="team"><span class="flag">${m.teamB.flag}</span><span class="tname">${m.teamB.name}</span></div>
+      <div class="team"><span class="flag">${m.teamB.flag}</span><span class="tname">${teamName(m.teamB, m.slotB)}</span></div>
     </div>
     <div class="score-pill">
       <input class="box" id="ra-${m.id}" type="number" min="0" max="30" value="${m.realA != null ? m.realA : ""}" placeholder="-" inputmode="numeric" />
@@ -554,12 +564,13 @@ function adminEditTeams(matchId) {
   const m = state.data.matches[matchId];
   $("#modal-card").innerHTML = `
     <div class="modal-title">Editar equipos</div>
-    <div class="modal-sub">${roundLabel(m.round)} — define los equipos clasificados</div>
+    <div class="modal-sub">${roundLabel(m.round)} — define los equipos clasificados<br>
+      <small style="color:var(--muted)">${m.slotA || "Equipo A"} &nbsp;vs&nbsp; ${m.slotB || "Equipo B"}</small></div>
     <div class="champ-picker">
-      <label class="field"><span>Equipo A (nombre)</span><input class="champ-select" id="ea-name" value="${m.teamA.name === "Por definir" ? "" : m.teamA.name}" placeholder="Ej. Brasil" /></label>
-      <label class="field"><span>Bandera A (emoji)</span><input class="champ-select" id="ea-flag" value="${m.teamA.flag === "🏳️" ? "" : m.teamA.flag}" placeholder="🇧🇷" maxlength="4" /></label>
-      <label class="field"><span>Equipo B (nombre)</span><input class="champ-select" id="eb-name" value="${m.teamB.name === "Por definir" ? "" : m.teamB.name}" placeholder="Ej. Francia" /></label>
-      <label class="field"><span>Bandera B (emoji)</span><input class="champ-select" id="eb-flag" value="${m.teamB.flag === "🏳️" ? "" : m.teamB.flag}" placeholder="🇫🇷" maxlength="4" /></label>
+      <label class="field"><span>Equipo A (nombre)</span><input class="champ-select" id="ea-name" value="${m.teamA.name === "Por definir" ? "" : m.teamA.name}" placeholder="${m.slotA || "Ej. Brasil"}" /></label>
+      <label class="field"><span>Bandera A (emoji)</span><input class="champ-select" id="ea-flag" value="${m.teamA.flag === "🏳️" ? "" : m.teamA.flag}" placeholder="🇧🇷" maxlength="8" /></label>
+      <label class="field"><span>Equipo B (nombre)</span><input class="champ-select" id="eb-name" value="${m.teamB.name === "Por definir" ? "" : m.teamB.name}" placeholder="${m.slotB || "Ej. Francia"}" /></label>
+      <label class="field"><span>Bandera B (emoji)</span><input class="champ-select" id="eb-flag" value="${m.teamB.flag === "🏳️" ? "" : m.teamB.flag}" placeholder="🇫🇷" maxlength="8" /></label>
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary" id="save-teams">Guardar equipos</button>
