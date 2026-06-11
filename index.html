@@ -10,7 +10,7 @@
   <title>Quiniela Mundial 2026 ⚽</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=15" />
+  <link rel="stylesheet" href="css/styles.css?v=17" />
 </head>
 <body>
   <!-- ====================== LOADER ====================== -->
@@ -40,8 +40,9 @@
       </label>
       <label class="field">
         <span>Contraseña <small class="field-hint">(protege tu nombre en otros dispositivos)</small></span>
-        <input id="input-password" type="password" maxlength="30" placeholder="Mín. 4 caracteres" autocomplete="current-password" />
+        <input id="input-password" type="password" maxlength="30" placeholder="Mín. 8 chars" autocomplete="current-password" />
       </label>
+      <p class="hint" style="text-align:left;margin-top:-10px;font-size:11px">Mín. 8 caracteres · mayúscula · minúscula · número · símbolo (!@#$%…)</p>
 
       <div class="tabs">
         <button class="tab active" data-tab="join">Unirme a quiniela</button>
@@ -137,12 +138,13 @@
 
   <!-- Firebase SDK (compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
-  <script src="js/firebase-config.js?v=15"></script>
-  <script src="js/tournament-data.js?v=15"></script>
-  <script src="js/scoring.js?v=15"></script>
-  <script src="js/app.js?v=15"></script>
+  <script src="js/firebase-config.js?v=17"></script>
+  <script src="js/tournament-data.js?v=17"></script>
+  <script src="js/scoring.js?v=17"></script>
+  <script src="js/app.js?v=17"></script>
 </body>
 </html>

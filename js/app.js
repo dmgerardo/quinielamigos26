@@ -100,6 +100,16 @@ function bindStaticEvents() {
 
 /* ===================== CREAR / UNIRSE ===================== */
 
+// Valida complejidad de contraseña. Devuelve mensaje de error o null si es válida.
+function validatePassword(pw) {
+  if (pw.length < 8)              return "La contraseña debe tener al menos 8 caracteres.";
+  if (!/[A-Z]/.test(pw))         return "Debe incluir al menos una letra mayúscula.";
+  if (!/[a-z]/.test(pw))         return "Debe incluir al menos una letra minúscula.";
+  if (!/[0-9]/.test(pw))         return "Debe incluir al menos un número.";
+  if (!/[^A-Za-z0-9]/.test(pw))  return "Debe incluir al menos un carácter especial (ej. !@#$%).";
+  return null;
+}
+
 // SHA-256 del password + playerKey como sal. Devuelve hex de 64 chars o null si no hay password.
 async function hashPassword(password, playerKey) {
   if (!password) return null;
@@ -128,7 +138,7 @@ async function handleCreate() {
   if (!name) return;
   const tname = $("#input-tname").value.trim() || "Quiniela Mundial 2026";
   const password = $("#input-password").value;
-  if (password.length < 4) { showAuthError("Escribe una contraseña de al menos 4 caracteres."); return; }
+  const pwErr = validatePassword(password); if (pwErr) { showAuthError(pwErr); return; }
 
   let code, exists = true, tries = 0;
   do {
@@ -173,7 +183,7 @@ async function handleJoin() {
   const code = $("#input-code").value.trim().toUpperCase();
   if (code.length < 4) { showAuthError("Código inválido."); return; }
   const password = $("#input-password").value;
-  if (password.length < 4) { showAuthError("Escribe una contraseña de al menos 4 caracteres."); return; }
+  const pwErr = validatePassword(password); if (pwErr) { showAuthError(pwErr); return; }
 
   const snap = await db.ref("tournaments/" + code + "/name").get();
   if (!snap.exists()) { showAuthError("No existe una quiniela con ese código."); return; }

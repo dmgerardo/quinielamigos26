@@ -28,5 +28,23 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 
+// ── App Check (reCAPTCHA v3) ──────────────────────────────────────────────
+//  1. Ve a https://www.google.com/recaptcha/admin/create
+//     · Tipo: reCAPTCHA v3  · Dominio: dmgerardo.github.io
+//  2. Copia el "Site key" y pégalo abajo en RECAPTCHA_SITE_KEY.
+//  3. En Firebase Console → App Check → Realtime Database → registra la app
+//     con esa misma site key y pon el enforcement en "Monitor" primero, luego "Enforce".
+const RECAPTCHA_SITE_KEY = "TU_RECAPTCHA_SITE_KEY_AQUI";
+
+if (RECAPTCHA_SITE_KEY !== "TU_RECAPTCHA_SITE_KEY_AQUI") {
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true; // token de debug para desarrollo local
+  }
+  firebase.appCheck().activate(
+    new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+    true // refresco automático de token
+  );
+}
+
 // Bandera para detectar si todavía no se configuraron credenciales reales
 const FIREBASE_CONFIGURED = firebaseConfig.apiKey !== "TU_API_KEY";
