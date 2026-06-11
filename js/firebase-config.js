@@ -34,7 +34,7 @@ const auth = firebase.auth();
 //  2. Copia el "Site key" y pégalo abajo en RECAPTCHA_SITE_KEY.
 //  3. En Firebase Console → App Check → Realtime Database → registra la app
 //     con esa misma site key y pon el enforcement en "Monitor" primero, luego "Enforce".
-const RECAPTCHA_SITE_KEY = "TU_RECAPTCHA_SITE_KEY_AQUI";
+const RECAPTCHA_SITE_KEY = "6LfCvxktAAAAAGAZjRCKJFUwsIfKLZJjuef0UW7W";
 
 if (RECAPTCHA_SITE_KEY !== "TU_RECAPTCHA_SITE_KEY_AQUI") {
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
