@@ -339,6 +339,8 @@ function renderMatches() {
 
 // Las predicciones se cierran 1 hora antes del inicio del partido (anti-trampa).
 const LOCK_BEFORE_MS = 60 * 60 * 1000;
+// Fecha límite para elegir campeón: viernes 19 jun 2026 al final del día (hora local).
+const CHAMPION_DEADLINE = new Date("2026-06-20T00:00:00").getTime();
 function lockTime(m) { return typeof m.kickoffMs === "number" ? m.kickoffMs - LOCK_BEFORE_MS : Infinity; }
 function isLocked(m) { return m.played || Date.now() >= lockTime(m); }
 
@@ -527,7 +529,7 @@ function renderRanking() {
     banner.innerHTML = `🏆 Aún no eliges campeón mundial (+${CHAMPION_POINTS} pts). <a href="#" id="change-champ" style="color:var(--accent)">Elegir ahora</a>`;
     const link = $("#change-champ");
     if (link) {
-      if (anyMatchPlayed()) link.replaceWith(document.createTextNode(" (bloqueado: el torneo ya inició)"));
+      if (isChampLocked()) link.replaceWith(document.createTextNode(" (bloqueado: plazo vencido o torneo iniciado)"));
       else link.addEventListener("click", (e) => { e.preventDefault(); openChampionPicker(); });
     }
   }
@@ -557,13 +559,16 @@ function renderRanking() {
 function anyMatchPlayed() {
   return Object.values(state.data.matches || {}).some((m) => m.played);
 }
+function isChampLocked() {
+  return anyMatchPlayed() || Date.now() >= CHAMPION_DEADLINE;
+}
 
 function openChampionPicker() {
   const teams = allTeamNames();
   const current = (state.data.participants[state.playerKey] || {}).championPick || "";
   $("#modal-card").innerHTML = `
     <div class="modal-title">🏆 Elige al campeón</div>
-    <div class="modal-sub">Ganarás +${CHAMPION_POINTS} pts si tu equipo gana el Mundial. ⚠️ Solo puedes elegir <b>una vez</b> y <b>no se puede cambiar</b>; debe ser antes de que inicie el torneo.</div>
+    <div class="modal-sub">Ganarás +${CHAMPION_POINTS} pts si tu equipo gana el Mundial. ⚠️ Solo puedes elegir <b>una vez</b> y <b>no se puede cambiar</b>. Plazo límite: <b>viernes 19 de junio</b>.</div>
     <div class="champ-picker">
       <select class="champ-select" id="champ-select">
         <option value="">— Selecciona un equipo —</option>
@@ -579,7 +584,7 @@ function openChampionPicker() {
     const val = $("#champ-select").value;
     if (!val) { toast("Selecciona un equipo", true); return; }
     if (current) { toast("Ya elegiste campeón; no se puede cambiar", true); closeModal(); return; }
-    if (anyMatchPlayed()) { toast("El torneo ya inició", true); closeModal(); return; }
+    if (isChampLocked()) { toast("Plazo vencido: la elección de campeón cerró el viernes 19 de junio", true); closeModal(); return; }
     await db.ref(`tournaments/${state.code}/participants/${state.playerKey}/championPick`).set(val);
     closeModal(); toast("Campeón guardado 🏆");
   });
