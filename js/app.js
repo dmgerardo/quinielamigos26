@@ -178,10 +178,6 @@ function enterTournament(code) {
           return;
         }
         state.data = snap.val();
-        // asegurar mi participante
-        if (!state.data.participants || !state.data.participants[state.playerKey]) {
-          if (first) { reject(new Error("No inscrito")); return; }
-        }
         if (first) {
           first = false;
           addHistory(code, state.data.name, state.name);
@@ -760,6 +756,11 @@ async function quickEnter(code) {
   state.playerKey = makePlayerKey(h.name, code);
   showLoader();
   try {
+    // Asegura que el slot del participante exista (migra torneos anteriores al nuevo playerKey)
+    await db.ref(`tournaments/${code}/participants/${state.playerKey}`).update({
+      name: h.name,
+      joinedAt: firebase.database.ServerValue.TIMESTAMP
+    });
     await enterTournament(code);
   } catch (e) {
     hideLoader();
