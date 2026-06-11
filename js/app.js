@@ -6,6 +6,12 @@
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
+// Escapa HTML para evitar XSS al insertar datos de Firebase en innerHTML.
+const esc = (s) => String(s ?? "")
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+  .replace(/'/g, "&#39;");
+
 const HISTORY_KEY = "quiniela2026_history"; // lista de quinielas en las que participo
 
 const state = {
@@ -332,7 +338,7 @@ function dayKey(iso) {
 }
 function metaLine(m) {
   return `${roundLabel(m.round)}${m.group ? " · Grupo " + m.group : ""}` +
-         `${m.kickoff ? " · " + fmtKickoff(m.kickoff) : ""}${m.venue ? " · 📍 " + m.venue : ""}`;
+         `${m.kickoff ? " · " + fmtKickoff(m.kickoff) : ""}${m.venue ? " · 📍 " + esc(m.venue) : ""}`;
 }
 
 function matchCard(m, pred) {
@@ -367,9 +373,9 @@ function matchCard(m, pred) {
       ${statusBadge(m)}
     </div>
     <div class="teams-row">
-      <div class="team"><span class="flag">${m.teamA.flag}</span><span class="tname">${teamName(m.teamA, m.slotA)}</span></div>
+      <div class="team"><span class="flag">${esc(m.teamA.flag)}</span><span class="tname">${esc(teamName(m.teamA, m.slotA))}</span></div>
       <span class="vs">VS</span>
-      <div class="team"><span class="flag">${m.teamB.flag}</span><span class="tname">${teamName(m.teamB, m.slotB)}</span></div>
+      <div class="team"><span class="flag">${esc(m.teamB.flag)}</span><span class="tname">${esc(teamName(m.teamB, m.slotB))}</span></div>
     </div>
     ${realRow}
     ${predRow}
@@ -401,7 +407,7 @@ function openPrediction(matchId) {
     <div class="modal-sub">${roundLabel(m.round)}${m.group ? " · Grupo " + m.group : ""}</div>
     <div class="modal-teams">
       <div class="modal-team">
-        <span class="flag">${m.teamA.flag}</span><span class="tname">${m.teamA.name}</span>
+        <span class="flag">${esc(m.teamA.flag)}</span><span class="tname">${esc(m.teamA.name)}</span>
         <div class="stepper">
           <button data-d="-1" data-s="a">−</button>
           <span class="num" id="num-a">${modalScore.a}</span>
@@ -410,7 +416,7 @@ function openPrediction(matchId) {
       </div>
       <div class="modal-vs">:</div>
       <div class="modal-team">
-        <span class="flag">${m.teamB.flag}</span><span class="tname">${m.teamB.name}</span>
+        <span class="flag">${esc(m.teamB.flag)}</span><span class="tname">${esc(m.teamB.name)}</span>
         <div class="stepper">
           <button data-d="-1" data-s="b">−</button>
           <span class="num" id="num-b">${modalScore.b}</span>
@@ -441,7 +447,7 @@ function openPrediction(matchId) {
 
 function updateWinnerTag(m) {
   const o = outcome(modalScore.a, modalScore.b);
-  const txt = o === "X" ? "Empate" : "Gana <b>" + (o === "1" ? m.teamA.name : m.teamB.name) + "</b>";
+  const txt = o === "X" ? "Empate" : "Gana <b>" + esc(o === "1" ? m.teamA.name : m.teamB.name) + "</b>";
   $("#winner-tag").innerHTML = txt;
 }
 
@@ -475,10 +481,10 @@ function renderRanking() {
   const myPick = parts[state.playerKey] && parts[state.playerKey].championPick;
   banner.className = "champion-banner show";
   if (realChamp) {
-    banner.innerHTML = `🏆 Campeón del torneo: <b>${realChamp}</b> · quienes lo eligieron ganaron +${CHAMPION_POINTS} pts.`;
+    banner.innerHTML = `🏆 Campeón del torneo: <b>${esc(realChamp)}</b> · quienes lo eligieron ganaron +${CHAMPION_POINTS} pts.`;
   } else if (myPick) {
     // Ya eligió: la elección de campeón NO se puede cambiar.
-    banner.innerHTML = `🏆 Tu campeón: <b>${myPick}</b> 🔒 (+${CHAMPION_POINTS} pts si acierta). Esta elección es definitiva.`;
+    banner.innerHTML = `🏆 Tu campeón: <b>${esc(myPick)}</b> 🔒 (+${CHAMPION_POINTS} pts si acierta). Esta elección es definitiva.`;
   } else {
     banner.innerHTML = `🏆 Aún no eliges campeón mundial (+${CHAMPION_POINTS} pts). <a href="#" id="change-champ" style="color:var(--accent)">Elegir ahora</a>`;
     const link = $("#change-champ");
@@ -497,7 +503,7 @@ function renderRanking() {
     li.innerHTML = `
       <div class="rank-pos">${medal}</div>
       <div class="rank-name">
-        <span>${r.name}
+        <span>${esc(r.name)}
           ${r.pid === state.playerKey ? '<span class="you-tag">TÚ</span>' : ""}
           ${r.isAdmin ? '<span class="admin-tag">ADMIN</span>' : ""}
         </span>
@@ -600,9 +606,9 @@ function adminCard(m) {
       ${statusBadge(m)}
     </div>
     <div class="teams-row">
-      <div class="team"><span class="flag">${m.teamA.flag}</span><span class="tname">${teamName(m.teamA, m.slotA)}</span></div>
+      <div class="team"><span class="flag">${esc(m.teamA.flag)}</span><span class="tname">${esc(teamName(m.teamA, m.slotA))}</span></div>
       <span class="vs">VS</span>
-      <div class="team"><span class="flag">${m.teamB.flag}</span><span class="tname">${teamName(m.teamB, m.slotB)}</span></div>
+      <div class="team"><span class="flag">${esc(m.teamB.flag)}</span><span class="tname">${esc(teamName(m.teamB, m.slotB))}</span></div>
     </div>
     <div class="score-pill">
       <input class="box" id="ra-${m.id}" type="number" min="0" max="30" value="${m.realA != null ? m.realA : ""}" placeholder="-" inputmode="numeric" />
@@ -644,10 +650,10 @@ function adminEditTeams(matchId) {
     <div class="modal-sub">${roundLabel(m.round)} — define los equipos clasificados<br>
       <small style="color:var(--muted)">${m.slotA || "Equipo A"} &nbsp;vs&nbsp; ${m.slotB || "Equipo B"}</small></div>
     <div class="champ-picker">
-      <label class="field"><span>Equipo A (nombre)</span><input class="champ-select" id="ea-name" value="${m.teamA.name === "Por definir" ? "" : m.teamA.name}" placeholder="${m.slotA || "Ej. Brasil"}" /></label>
-      <label class="field"><span>Bandera A (emoji)</span><input class="champ-select" id="ea-flag" value="${m.teamA.flag === "🏳️" ? "" : m.teamA.flag}" placeholder="🇧🇷" maxlength="8" /></label>
-      <label class="field"><span>Equipo B (nombre)</span><input class="champ-select" id="eb-name" value="${m.teamB.name === "Por definir" ? "" : m.teamB.name}" placeholder="${m.slotB || "Ej. Francia"}" /></label>
-      <label class="field"><span>Bandera B (emoji)</span><input class="champ-select" id="eb-flag" value="${m.teamB.flag === "🏳️" ? "" : m.teamB.flag}" placeholder="🇫🇷" maxlength="8" /></label>
+      <label class="field"><span>Equipo A (nombre)</span><input class="champ-select" id="ea-name" value="${esc(m.teamA.name === "Por definir" ? "" : m.teamA.name)}" placeholder="${esc(m.slotA || "Ej. Brasil")}" /></label>
+      <label class="field"><span>Bandera A (emoji)</span><input class="champ-select" id="ea-flag" value="${esc(m.teamA.flag === "🏳️" ? "" : m.teamA.flag)}" placeholder="🇧🇷" maxlength="8" /></label>
+      <label class="field"><span>Equipo B (nombre)</span><input class="champ-select" id="eb-name" value="${esc(m.teamB.name === "Por definir" ? "" : m.teamB.name)}" placeholder="${esc(m.slotB || "Ej. Francia")}" /></label>
+      <label class="field"><span>Bandera B (emoji)</span><input class="champ-select" id="eb-flag" value="${esc(m.teamB.flag === "🏳️" ? "" : m.teamB.flag)}" placeholder="🇫🇷" maxlength="8" /></label>
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary" id="save-teams">Guardar equipos</button>
@@ -691,11 +697,11 @@ function openAdminReport() {
     const isAdm = r.pid === state.data.adminPlayerKey;
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1;
     return `<tr>
-      <td class="rp-name">${medal} ${r.name}${isAdm ? ' <span class="admin-tag" style="font-size:10px">A</span>' : ""}</td>
+      <td class="rp-name">${medal} ${esc(r.name)}${isAdm ? ' <span class="admin-tag" style="font-size:10px">A</span>' : ""}</td>
       <td class="rp-num">${r.total}</td>
       <td class="rp-num">${r.correct}</td>
       <td class="rp-num">${r.exact}</td>
-      <td class="rp-champ">${r.champ}</td>
+      <td class="rp-champ">${esc(r.champ)}</td>
       <td class="rp-num">${r.predCount}/${predectable}</td>
     </tr>`;
   }).join("");
@@ -710,7 +716,7 @@ function openAdminReport() {
           const pred = predForView(r.pid)[m.id];
           const pts = pred && m.played ? scoreMatch(pred, m.realA, m.realB) : null;
           return `<div class="rp-pred-row">
-            <span class="rp-pred-name">${r.name}</span>
+            <span class="rp-pred-name">${esc(r.name)}</span>
             <span class="rp-pred-val">
               ${pred ? `${pred.a}–${pred.b}` : '<span style="color:var(--muted)">—</span>'}
               ${pts != null ? `<b class="rp-pts ${pts > 0 ? "pos" : "zero"}">+${pts}</b>` : ""}
@@ -722,7 +728,7 @@ function openAdminReport() {
           : `<span style="color:var(--gold);font-size:11px">CERRADO</span>`;
         return `<div class="rp-match">
           <div class="rp-match-hdr">
-            <span>${m.teamA.flag} ${teamName(m.teamA, m.slotA)} ${resultLabel} ${teamName(m.teamB, m.slotB)} ${m.teamB.flag}</span>
+            <span>${esc(m.teamA.flag)} ${esc(teamName(m.teamA, m.slotA))} ${resultLabel} ${esc(teamName(m.teamB, m.slotB))} ${esc(m.teamB.flag)}</span>
             <span class="rp-round">${roundLabel(m.round)}${m.group ? " · Grp " + m.group : ""}</span>
           </div>
           ${predRows}
@@ -732,7 +738,7 @@ function openAdminReport() {
 
   $("#modal-card").innerHTML = `
     <div class="modal-title">📋 Reporte de participantes</div>
-    <div class="modal-sub">${state.data.name || state.code} · ${scored.length} participante${scored.length !== 1 ? "s" : ""}</div>
+    <div class="modal-sub">${esc(state.data.name || state.code)} · ${scored.length} participante${scored.length !== 1 ? "s" : ""}</div>
     <div class="rp-scroll">
       <div class="rp-table-wrap">
         <table class="rp-table">
@@ -839,9 +845,9 @@ async function loadPublicTournaments() {
     el.innerHTML = `
       <p class="public-hint">Elige una quiniela para unirte:</p>
       ${items.map((t) => `
-        <button class="public-item" data-code="${t.code}">
-          <span class="public-name">${t.name}</span>
-          <span class="public-meta">por ${t.adminName} · #${t.code}</span>
+        <button class="public-item" data-code="${esc(t.code)}">
+          <span class="public-name">${esc(t.name)}</span>
+          <span class="public-meta">por ${esc(t.adminName)} · #${esc(t.code)}</span>
         </button>`).join("")}`;
 
     $$(".public-item", el).forEach((b) =>
@@ -881,11 +887,11 @@ function renderHistory() {
     const item = document.createElement("div");
     item.className = "hist-item";
     item.innerHTML = `
-      <button class="hist-enter" data-code="${h.code}">
-        <span class="hist-name">${h.tname || "Quiniela"}</span>
-        <span class="hist-meta">#${h.code} · como ${h.name}</span>
+      <button class="hist-enter" data-code="${esc(h.code)}">
+        <span class="hist-name">${esc(h.tname || "Quiniela")}</span>
+        <span class="hist-meta">#${esc(h.code)} · como ${esc(h.name)}</span>
       </button>
-      <button class="hist-del" data-code="${h.code}" title="Quitar de la lista">✕</button>`;
+      <button class="hist-del" data-code="${esc(h.code)}" title="Quitar de la lista">✕</button>`;
     list.appendChild(item);
   });
   $$(".hist-enter").forEach((b) => b.addEventListener("click", () => quickEnter(b.dataset.code)));
