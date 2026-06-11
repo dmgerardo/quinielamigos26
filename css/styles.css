@@ -139,6 +139,19 @@ input { font-family: inherit; }
 }
 .chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
+/* ===================== SORT BAR ===================== */
+.sort-bar {
+  display: flex; gap: 0; margin-bottom: 10px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  padding: 3px; width: fit-content;
+}
+.sort-btn {
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  background: transparent; border: none; padding: 6px 14px; border-radius: 999px;
+  cursor: pointer; transition: .15s; white-space: nowrap;
+}
+.sort-btn.active { background: var(--card-2); color: var(--text); }
+
 /* ===================== MATCH CARDS ===================== */
 .matches-list { display: flex; flex-direction: column; gap: 12px; }
 .group-label {

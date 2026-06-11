@@ -9,15 +9,27 @@ const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const HISTORY_KEY = "quiniela2026_history"; // lista de quinielas en las que participo
 
 const state = {
-  uid: null,
+  uid: null,        // Firebase anonymous UID (solo para checar admin)
+  playerKey: null,  // clave estable entre dispositivos: slugify(name)_code
   name: null,
   code: null,
   view: "matches",
   round: "grupos",
+  matchSort: "grupo", // "grupo" | "fecha"
   adminRound: "grupos",
   data: null,        // snapshot completo del torneo
   ref: null          // referencia firebase con listener activo
 };
+
+// Genera una clave estable a partir del nombre del usuario y el código del torneo.
+// Mismo nombre + mismo código → misma clave en cualquier dispositivo.
+function makePlayerKey(name, code) {
+  const slug = name.toLowerCase().trim()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "") // quitar acentos
+    .replace(/[^a-z0-9]/g, "")
+    .slice(0, 15);
+  return slug + "_" + code.toLowerCase();
+}
 
 /* ===================== ARRANQUE ===================== */
 window.addEventListener("DOMContentLoaded", init);
@@ -105,14 +117,16 @@ async function handleCreate() {
   } while (exists && ++tries < 5);
 
   state.name = name;
+  state.playerKey = makePlayerKey(name, code);
 
   const payload = {
     name: tname,
     admin: state.uid,
+    adminPlayerKey: state.playerKey,
     createdAt: firebase.database.ServerValue.TIMESTAMP,
     matches: buildInitialMatches(),
     participants: {
-      [state.uid]: { name, championPick: "", joinedAt: firebase.database.ServerValue.TIMESTAMP }
+      [state.playerKey]: { name, championPick: "", joinedAt: firebase.database.ServerValue.TIMESTAMP }
     }
   };
 
@@ -135,8 +149,9 @@ async function handleJoin() {
   if (!snap.exists()) { showAuthError("No existe una quiniela con ese código."); return; }
 
   state.name = name;
+  state.playerKey = makePlayerKey(name, code);
   try {
-    await db.ref(`tournaments/${code}/participants/${state.uid}`).update({
+    await db.ref(`tournaments/${code}/participants/${state.playerKey}`).update({
       name,
       joinedAt: firebase.database.ServerValue.TIMESTAMP
     });
@@ -164,7 +179,7 @@ function enterTournament(code) {
         }
         state.data = snap.val();
         // asegurar mi participante
-        if (!state.data.participants || !state.data.participants[state.uid]) {
+        if (!state.data.participants || !state.data.participants[state.playerKey]) {
           if (first) { reject(new Error("No inscrito")); return; }
         }
         if (first) {
@@ -206,39 +221,72 @@ function matchesArray() {
 function myPreds() {
   const p = state.data.predictions || {};
   const out = {};
-  Object.keys(p).forEach((mid) => { if (p[mid][state.uid]) out[mid] = p[mid][state.uid]; });
+  Object.keys(p).forEach((mid) => { if (p[mid][state.playerKey]) out[mid] = p[mid][state.playerKey]; });
   return out;
 }
-function predForView(uid) {
+function predForView(pid) {
   const p = state.data.predictions || {};
   const out = {};
-  Object.keys(p).forEach((mid) => { if (p[mid][uid]) out[mid] = p[mid][uid]; });
+  Object.keys(p).forEach((mid) => { if (p[mid][pid]) out[mid] = p[mid][pid]; });
   return out;
+}
+
+/* ---------- Sort bar ---------- */
+function renderSortBar() {
+  const bar = $("#sort-bar");
+  if (!bar) return;
+  const opts = [
+    { key: "grupo", label: "Por grupo" },
+    { key: "fecha", label: "Por fecha" }
+  ];
+  bar.innerHTML = opts.map(o =>
+    `<button class="sort-btn${state.matchSort === o.key ? " active" : ""}" data-sort="${o.key}">${o.label}</button>`
+  ).join("");
+  $$(".sort-btn", bar).forEach(b =>
+    b.addEventListener("click", () => { state.matchSort = b.dataset.sort; renderMatches(); })
+  );
 }
 
 /* ---------- Vista PARTIDOS ---------- */
 function renderMatches() {
   renderRoundFilter("#round-filter", state.round, (r) => { state.round = r; renderMatches(); });
+  renderSortBar();
 
   const list = $("#matches-list");
   const preds = myPreds();
-  const matches = matchesArray().filter((m) => m.round === state.round);
+  let matches = matchesArray().filter((m) => m.round === state.round);
 
   list.innerHTML = "";
   if (!matches.length) { list.innerHTML = `<p class="empty">No hay partidos en esta ronda todavía.</p>`; return; }
 
-  // Agrupar por grupo en fase de grupos
-  let lastGroup = null;
-  matches.forEach((m) => {
-    if (m.round === "grupos" && m.group !== lastGroup) {
-      lastGroup = m.group;
-      const lbl = document.createElement("div");
-      lbl.className = "group-label";
-      lbl.textContent = "Grupo " + m.group;
-      list.appendChild(lbl);
-    }
-    list.appendChild(matchCard(m, preds[m.id]));
-  });
+  if (state.matchSort === "fecha") {
+    matches = matches.slice().sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
+    let lastDay = null;
+    matches.forEach((m) => {
+      const dk = dayKey(m.kickoff);
+      if (dk && dk !== lastDay) {
+        lastDay = dk;
+        const lbl = document.createElement("div");
+        lbl.className = "group-label";
+        lbl.textContent = fmtDay(m.kickoff);
+        list.appendChild(lbl);
+      }
+      list.appendChild(matchCard(m, preds[m.id]));
+    });
+  } else {
+    // Default: agrupar por grupo en fase de grupos
+    let lastGroup = null;
+    matches.forEach((m) => {
+      if (m.round === "grupos" && m.group !== lastGroup) {
+        lastGroup = m.group;
+        const lbl = document.createElement("div");
+        lbl.className = "group-label";
+        lbl.textContent = "Grupo " + m.group;
+        list.appendChild(lbl);
+      }
+      list.appendChild(matchCard(m, preds[m.id]));
+    });
+  }
 }
 
 // Las predicciones se cierran 1 hora antes del inicio del partido (anti-trampa).
@@ -262,10 +310,21 @@ const _DTF = new Intl.DateTimeFormat("es-MX", {
   weekday: "short", day: "numeric", month: "short",
   hour: "2-digit", minute: "2-digit", hour12: false
 });
+const _DDF = new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "long" });
 function fmtKickoff(iso) {
   if (!iso) return "";
   const s = _DTF.format(new Date(iso)).replace(/,/g, "");
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function fmtDay(iso) {
+  if (!iso) return "";
+  const s = _DDF.format(new Date(iso)).replace(/,/g, "");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+// Clave de día local para agrupar headers (ej. "2026-06-11 America/Mexico_City")
+function dayKey(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("sv"); // "YYYY-MM-DD" en timezone local
 }
 function metaLine(m) {
   return `${roundLabel(m.round)}${m.group ? " · Grupo " + m.group : ""}` +
@@ -385,7 +444,7 @@ function updateWinnerTag(m) {
 async function savePrediction(m) {
   if (isLocked(m)) { toast("⏱️ Este partido ya está cerrado", true); closeModal(); return; }
   try {
-    await db.ref(`tournaments/${state.code}/predictions/${m.id}/${state.uid}`).set({
+    await db.ref(`tournaments/${state.code}/predictions/${m.id}/${state.playerKey}`).set({
       a: modalScore.a, b: modalScore.b, at: firebase.database.ServerValue.TIMESTAMP
     });
     closeModal();
@@ -401,15 +460,15 @@ function renderRanking() {
   const realChamp = getRealChampion(matches);
   const parts = state.data.participants || {};
 
-  const rows = Object.keys(parts).map((uid) => {
-    const s = computeUserScore(matches, predForView(uid), parts[uid].championPick, realChamp);
-    return { uid, name: parts[uid].name, isAdmin: uid === state.data.admin, ...s };
+  const rows = Object.keys(parts).map((pid) => {
+    const s = computeUserScore(matches, predForView(pid), parts[pid].championPick, realChamp);
+    return { pid, name: parts[pid].name, isAdmin: pid === state.data.adminPlayerKey, ...s };
   });
   rows.sort((a, b) => b.total - a.total || b.exact - a.exact || a.name.localeCompare(b.name));
 
   // banner campeón
   const banner = $("#champion-banner");
-  const myPick = parts[state.uid] && parts[state.uid].championPick;
+  const myPick = parts[state.playerKey] && parts[state.playerKey].championPick;
   banner.className = "champion-banner show";
   if (realChamp) {
     banner.innerHTML = `🏆 Campeón del torneo: <b>${realChamp}</b> · quienes lo eligieron ganaron +${CHAMPION_POINTS} pts.`;
@@ -429,13 +488,13 @@ function renderRanking() {
   list.innerHTML = "";
   rows.forEach((r, i) => {
     const li = document.createElement("li");
-    li.className = "rank-item" + (i < 3 ? " top" + (i + 1) : "") + (r.uid === state.uid ? " me" : "");
+    li.className = "rank-item" + (i < 3 ? " top" + (i + 1) : "") + (r.pid === state.playerKey ? " me" : "");
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1;
     li.innerHTML = `
       <div class="rank-pos">${medal}</div>
       <div class="rank-name">
         <span>${r.name}
-          ${r.uid === state.uid ? '<span class="you-tag">TÚ</span>' : ""}
+          ${r.pid === state.playerKey ? '<span class="you-tag">TÚ</span>' : ""}
           ${r.isAdmin ? '<span class="admin-tag">ADMIN</span>' : ""}
         </span>
         <small>${r.correct} aciertos · ${r.exact} exactos</small>
@@ -453,7 +512,7 @@ function anyMatchPlayed() {
 
 function openChampionPicker() {
   const teams = allTeamNames();
-  const current = (state.data.participants[state.uid] || {}).championPick || "";
+  const current = (state.data.participants[state.playerKey] || {}).championPick || "";
   $("#modal-card").innerHTML = `
     <div class="modal-title">🏆 Elige al campeón</div>
     <div class="modal-sub">Ganarás +${CHAMPION_POINTS} pts si tu equipo gana el Mundial. ⚠️ Solo puedes elegir <b>una vez</b> y <b>no se puede cambiar</b>; debe ser antes de que inicie el torneo.</div>
@@ -473,7 +532,7 @@ function openChampionPicker() {
     if (!val) { toast("Selecciona un equipo", true); return; }
     if (current) { toast("Ya elegiste campeón; no se puede cambiar", true); closeModal(); return; }
     if (anyMatchPlayed()) { toast("El torneo ya inició", true); closeModal(); return; }
-    await db.ref(`tournaments/${state.code}/participants/${state.uid}/championPick`).set(val);
+    await db.ref(`tournaments/${state.code}/participants/${state.playerKey}/championPick`).set(val);
     closeModal(); toast("Campeón guardado 🏆");
   });
   $("#cancel-champ").addEventListener("click", closeModal);
@@ -484,7 +543,7 @@ function openChampionPicker() {
 function renderStats() {
   const matches = state.data.matches || {};
   const realChamp = getRealChampion(matches);
-  const s = computeUserScore(matches, myPreds(), (state.data.participants[state.uid] || {}).championPick, realChamp);
+  const s = computeUserScore(matches, myPreds(), (state.data.participants[state.playerKey] || {}).championPick, realChamp);
   const pct = s.playedPredicted ? Math.round((s.correct / s.playedPredicted) * 100) : 0;
 
   const maxRound = Math.max(1, ...ROUNDS.map((r) => s.byRound[r.key] || 0));
@@ -698,6 +757,7 @@ async function quickEnter(code) {
   const h = loadHistory().find((x) => x.code === code);
   if (!h) return;
   state.name = h.name;
+  state.playerKey = makePlayerKey(h.name, code);
   showLoader();
   try {
     await enterTournament(code);
@@ -710,7 +770,7 @@ async function quickEnter(code) {
 
 function logout() {
   if (state.ref) state.ref.off();
-  state.code = null; state.data = null; state.ref = null;
+  state.code = null; state.data = null; state.ref = null; state.playerKey = null;
   showScreen("auth");
   $("#input-code").value = "";
   renderHistory(); // la lista se conserva para reingresar fácil
