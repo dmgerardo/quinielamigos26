@@ -404,6 +404,25 @@ function matchCard(m, pred) {
       </div>`;
   }
 
+  // Muestra predicciones del grupo solo cuando el partido está en curso (cerrado pero sin resultado)
+  let livePreds = "";
+  if (locked && !m.played) {
+    const allPreds = (state.data.predictions || {})[m.id] || {};
+    const parts = state.data.participants || {};
+    const rows = Object.entries(allPreds)
+      .map(([pid, p]) => ({ name: esc((parts[pid] || {}).name || pid), a: p.a, b: p.b }))
+      .sort((x, y) => x.name.localeCompare(y.name));
+    if (rows.length) {
+      livePreds = `<div class="live-preds">
+        <div class="live-preds-title">Predicciones del grupo</div>
+        ${rows.map(r => `<div class="live-pred-row">
+          <span class="live-pred-name">${r.name}</span>
+          <span class="live-pred-val">${r.a}–${r.b}</span>
+        </div>`).join("")}
+      </div>`;
+    }
+  }
+
   const actionTxt = locked
     ? (pred ? "🔒 Predicción cerrada" : "🔒 Sin predicción")
     : (pred ? "✏️ Editar predicción" : "🎯 Hacer predicción");
@@ -420,6 +439,7 @@ function matchCard(m, pred) {
     </div>
     ${realRow}
     ${predRow}
+    ${livePreds}
     <button class="match-action ${pred ? "has-pred" : ""} ${locked ? "locked" : ""}">${actionTxt}</button>
   `;
 

@@ -385,3 +385,10 @@ th.rp-champ,td.rp-champ{ text-align: left; font-size: 12px; color: var(--muted);
 .rp-pts { font-size: 12px; font-weight: 800; padding: 2px 6px; border-radius: 999px; }
 .rp-pts.pos  { background: rgba(20,224,163,.15); color: var(--accent); }
 .rp-pts.zero { background: rgba(255,255,255,.07); color: var(--muted); }
+
+/* Predicciones del grupo (partidos en curso) */
+.live-preds { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.live-preds-title { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.live-pred-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-top: 1px solid rgba(255,255,255,.05); font-size: 13px; }
+.live-pred-name { color: var(--muted); }
+.live-pred-val  { font-weight: 700; color: var(--gold); }
