@@ -249,7 +249,7 @@ function enterTournament(code) {
   });
 }
 
-function isAdmin() { return state.data && state.data.admin === state.uid; }
+function isAdmin() { return state.data && state.data.adminPlayerKey === state.playerKey; }
 
 function toggleAdminTab() {
   $(".admin-only").classList.toggle("hidden", !isAdmin());
