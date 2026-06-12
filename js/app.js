@@ -21,7 +21,7 @@ const state = {
   code: null,
   view: "matches",
   round: "grupos",
-  matchSort: "grupo", // "grupo" | "fecha"
+  matchSort: "fecha", // "grupo" | "fecha"
   adminRound: "grupos",
   data: null,        // snapshot completo del torneo
   ref: null          // referencia firebase con listener activo
