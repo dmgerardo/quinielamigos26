@@ -527,13 +527,15 @@ async function savePrediction(m) {
 
 /* ---------- Vista RANKING ---------- */
 function renderRanking() {
-  const matches = state.data.matches || {};
-  const realChamp = getRealChampion(matches);
+  const matches = matchesArray();
+  const matchesMap = state.data.matches || {};
+  const realChamp = getRealChampion(matchesMap);
   const parts = state.data.participants || {};
 
   const rows = Object.keys(parts).map((pid) => {
-    const s = computeUserScore(matches, predForView(pid), parts[pid].championPick, realChamp);
-    return { pid, name: parts[pid].name, isAdmin: pid === state.data.adminPlayerKey, ...s };
+    const s = computeUserScore(matchesMap, predForView(pid), parts[pid].championPick, realChamp);
+    const predCount = Object.keys(predForView(pid)).length;
+    return { pid, name: parts[pid].name, isAdmin: pid === state.data.adminPlayerKey, champ: parts[pid].championPick || "—", predCount, ...s };
   });
   rows.sort((a, b) => b.total - a.total || b.exact - a.exact || a.name.localeCompare(b.name));
 
@@ -544,7 +546,6 @@ function renderRanking() {
   if (realChamp) {
     banner.innerHTML = `🏆 Campeón del torneo: <b>${esc(realChamp)}</b> · quienes lo eligieron ganaron +${CHAMPION_POINTS} pts.`;
   } else if (myPick) {
-    // Ya eligió: la elección de campeón NO se puede cambiar.
     banner.innerHTML = `🏆 Tu campeón: <b>${esc(myPick)}</b> 🔒 (+${CHAMPION_POINTS} pts si acierta). Esta elección es definitiva.`;
   } else {
     banner.innerHTML = `🏆 Aún no eliges campeón mundial (+${CHAMPION_POINTS} pts). <a href="#" id="change-champ" style="color:var(--accent)">Elegir ahora</a>`;
@@ -555,26 +556,47 @@ function renderRanking() {
     }
   }
 
+  const predectable = matches.filter(
+    (m) => m.teamA.name !== "Por definir" && m.teamB.name !== "Por definir"
+  ).length;
+
   const list = $("#ranking-list");
-  list.innerHTML = "";
-  rows.forEach((r, i) => {
-    const li = document.createElement("li");
-    li.className = "rank-item" + (i < 3 ? " top" + (i + 1) : "") + (r.pid === state.playerKey ? " me" : "");
-    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1;
-    li.innerHTML = `
-      <div class="rank-pos">${medal}</div>
-      <div class="rank-name">
-        <span>${esc(r.name)}
-          ${r.pid === state.playerKey ? '<span class="you-tag">TÚ</span>' : ""}
-          ${r.isAdmin ? '<span class="admin-tag">ADMIN</span>' : ""}
-        </span>
-        <small>${r.correct} aciertos · ${r.exact} exactos</small>
-      </div>
-      <div class="rank-pts">${r.total}<small> pts</small></div>
-    `;
-    list.appendChild(li);
-  });
-  if (!rows.length) list.innerHTML = `<p class="empty">Sin participantes aún.</p>`;
+  if (!rows.length) { list.innerHTML = `<p class="empty">Sin participantes aún.</p>`; return; }
+
+  const tableRows = rows.map((r, i) => {
+    const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `<span class="rk-pos">${i + 1}</span>`;
+    const isMe = r.pid === state.playerKey;
+    return `<tr class="${isMe ? "rk-me" : ""}">
+      <td class="rp-name">
+        ${medal} ${esc(r.name)}
+        ${isMe ? '<span class="you-tag">TÚ</span>' : ""}
+        ${r.isAdmin ? '<span class="admin-tag">A</span>' : ""}
+      </td>
+      <td class="rp-num">${r.total}</td>
+      <td class="rp-num">${r.correct}</td>
+      <td class="rp-num">${r.exact}</td>
+      <td class="rp-champ">${esc(r.champ)}</td>
+      <td class="rp-num">${r.predCount}/${predectable}</td>
+    </tr>`;
+  }).join("");
+
+  list.innerHTML = `
+    <div class="rp-table-wrap">
+      <table class="rp-table">
+        <thead>
+          <tr>
+            <th class="rp-name">Participante</th>
+            <th class="rp-num">Pts</th>
+            <th class="rp-num">Ac.</th>
+            <th class="rp-num">Ex.</th>
+            <th class="rp-champ">Campeón</th>
+            <th class="rp-num">Preds.</th>
+          </tr>
+        </thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+  `;
 }
 
 function anyMatchPlayed() {

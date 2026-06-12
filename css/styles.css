@@ -233,7 +233,11 @@ input { font-family: inherit; }
 .champion-banner.show { display: block; }
 .champion-banner b { color: var(--gold); }
 
-.ranking-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.ranking-list { list-style: none; }
+.ranking-list .rp-table-wrap { margin-top: 4px; }
+.rk-me { background: rgba(20,224,163,.06); }
+.rk-me td { border-color: rgba(20,224,163,.2); }
+.rk-pos { font-size: 13px; font-weight: 700; color: var(--muted); }
 .rank-item {
   display: flex; align-items: center; gap: 14px; background: var(--card);
   border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px;
