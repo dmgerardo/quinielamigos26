@@ -51,7 +51,7 @@
         "predictions": {
           "$matchId": {
             "$pid": {
-              ".write": "auth != null && root.child('tournaments').child($code).child('matches').child($matchId).child('played').val() !== true && (!root.child('tournaments').child($code).child('matches').child($matchId).child('kickoffMs').exists() || now < root.child('tournaments').child($code).child('matches').child($matchId).child('kickoffMs').val() - 3600000)",
+              ".write": "auth != null && (root.child('tournaments').child($code).child('admin').val() === auth.uid || (root.child('tournaments').child($code).child('matches').child($matchId).child('played').val() !== true && (!root.child('tournaments').child($code).child('matches').child($matchId).child('kickoffMs').exists() || now < root.child('tournaments').child($code).child('matches').child($matchId).child('kickoffMs').val() - 3600000)))",
               "a":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
               "b":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20" },
               "at": { ".validate": true },

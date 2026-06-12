@@ -88,6 +88,7 @@ function bindStaticEvents() {
   $("#btn-logout").addEventListener("click", logout);
   $("#t-code-chip").addEventListener("click", shareCode);
   $("#btn-report").addEventListener("click", openAdminReport);
+  $("#btn-capture").addEventListener("click", openAdminCapture);
 
   // Navegación inferior
   $$(".nav-btn").forEach((b) =>
@@ -809,6 +810,108 @@ function openAdminReport() {
   `;
   $("#close-report").addEventListener("click", closeModal);
   openModal();
+}
+
+/* ---------- Captura de predicción por participante (solo admin) ---------- */
+
+// "Cierre" de un partido = lockTime (15 min antes del inicio). La hora que se
+// registra al capturar a nombre de un participante es 1 minuto antes de ese cierre,
+// para que la predicción quede como si se hubiera enviado justo antes de cerrar.
+function captureRecordedAt(m) {
+  const lt = lockTime(m);
+  return (isFinite(lt) ? lt : Date.now()) - 60 * 1000;
+}
+
+function openAdminCapture() {
+  if (!isAdmin()) { toast("Solo el administrador puede capturar predicciones", true); return; }
+  const parts = state.data.participants || {};
+  const pids = Object.keys(parts).sort((a, b) =>
+    (parts[a].name || "").localeCompare(parts[b].name || ""));
+  // Solo partidos con equipos definidos (sin "Por definir"), ordenados por inicio.
+  const matches = matchesArray()
+    .filter((m) => m.teamA.name !== "Por definir" && m.teamB.name !== "Por definir")
+    .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
+
+  if (!pids.length) { toast("No hay participantes todavía", true); return; }
+  if (!matches.length) { toast("No hay partidos con equipos definidos", true); return; }
+
+  $("#modal-card").innerHTML = `
+    <div class="modal-title">✍️ Capturar predicción</div>
+    <div class="modal-sub">Registra el marcador de un participante que no alcanzó a enviarlo a tiempo. Se guardará con hora de <b>1 minuto antes del cierre</b> del partido.</div>
+    <div class="champ-picker">
+      <label class="field"><span>Participante</span>
+        <select class="champ-select" id="cap-pid">
+          ${pids.map((pid) => `<option value="${esc(pid)}">${esc(parts[pid].name)}</option>`).join("")}
+        </select>
+      </label>
+      <label class="field"><span>Partido</span>
+        <select class="champ-select" id="cap-mid">
+          ${matches.map((m) => `<option value="${esc(m.id)}">${esc(roundLabel(m.round))}${m.group ? " · Grp " + esc(m.group) : ""} — ${esc(teamName(m.teamA, m.slotA))} vs ${esc(teamName(m.teamB, m.slotB))}</option>`).join("")}
+        </select>
+      </label>
+      <div class="score-pill" style="margin-top:6px">
+        <input class="box" id="cap-a" type="number" min="0" max="20" placeholder="-" inputmode="numeric" />
+        <span class="sep">–</span>
+        <input class="box" id="cap-b" type="number" min="0" max="20" placeholder="-" inputmode="numeric" />
+      </div>
+      <p class="hint" id="cap-info" style="text-align:left;font-size:11px;margin-top:8px"></p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-accent" id="cap-save">Guardar predicción</button>
+      <button class="btn btn-ghost" id="cap-cancel">Cerrar</button>
+    </div>
+  `;
+
+  $("#cap-pid").addEventListener("change", refreshCaptureInfo);
+  $("#cap-mid").addEventListener("change", refreshCaptureInfo);
+  $("#cap-save").addEventListener("click", adminCaptureSave);
+  $("#cap-cancel").addEventListener("click", closeModal);
+  refreshCaptureInfo();
+  openModal();
+}
+
+// Pre-llena el marcador con la predicción existente (si la hay) y muestra
+// la hora con la que se registrará.
+function refreshCaptureInfo() {
+  const pid = $("#cap-pid").value;
+  const mid = $("#cap-mid").value;
+  const m = state.data.matches[mid];
+  if (!m) return;
+  const existing = predForView(pid)[mid];
+  $("#cap-a").value = existing ? existing.a : "";
+  $("#cap-b").value = existing ? existing.b : "";
+
+  const recIso = new Date(captureRecordedAt(m)).toISOString();
+  const parts = [];
+  parts.push(existing
+    ? `Predicción actual: <b>${existing.a}–${existing.b}</b> (se reemplazará).`
+    : "Sin predicción registrada.");
+  if (m.played) parts.push(`⚠️ Este partido ya está marcado como <b>jugado</b> (${m.realA}–${m.realB}).`);
+  parts.push(`Se registrará como enviado: <b>${esc(fmtKickoff(recIso))}</b> (1 min antes del cierre).`);
+  $("#cap-info").innerHTML = parts.join("<br>");
+}
+
+async function adminCaptureSave() {
+  if (!isAdmin()) { toast("Solo el administrador puede capturar predicciones", true); return; }
+  const pid = $("#cap-pid").value;
+  const mid = $("#cap-mid").value;
+  const a = parseInt($("#cap-a").value, 10);
+  const b = parseInt($("#cap-b").value, 10);
+  if (!pid || !mid) { toast("Selecciona participante y partido", true); return; }
+  if (isNaN(a) || isNaN(b) || a < 0 || b < 0 || a > 20 || b > 20) {
+    toast("Marcador inválido (0–20)", true); return;
+  }
+  const m = state.data.matches[mid];
+  const name = (state.data.participants[pid] || {}).name || pid;
+  try {
+    await db.ref(`tournaments/${state.code}/predictions/${mid}/${pid}`).set({
+      a, b, at: captureRecordedAt(m)
+    });
+    toast(`Predicción de ${name} capturada ✓`);
+    refreshCaptureInfo(); // refleja el nuevo valor sin cerrar el modal
+  } catch (e) {
+    toast("Error: " + e.message, true);
+  }
 }
 
 /* ===================== UTILIDADES UI ===================== */
