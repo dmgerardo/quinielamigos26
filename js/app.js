@@ -21,8 +21,10 @@ const state = {
   code: null,
   view: "matches",
   round: "grupos",
-  matchSort: "fecha", // "grupo" | "fecha"
+  matchSort: "fecha",    // "grupo" | "fecha"
+  showClosed: false,     // ocultar partidos cerrados en vista de predicciones
   adminRound: "grupos",
+  adminShowPlayed: false, // ocultar partidos con resultado en vista admin
   data: null,        // snapshot completo del torneo
   ref: null          // referencia firebase con listener activo
 };
@@ -288,12 +290,18 @@ function renderSortBar() {
     { key: "grupo", label: "Por grupo" },
     { key: "fecha", label: "Por fecha" }
   ];
+  const closedCount = matchesArray().filter(m => m.round === state.round && isLocked(m)).length;
   bar.innerHTML = opts.map(o =>
     `<button class="sort-btn${state.matchSort === o.key ? " active" : ""}" data-sort="${o.key}">${o.label}</button>`
-  ).join("");
-  $$(".sort-btn", bar).forEach(b =>
+  ).join("") +
+  `<button class="sort-btn sort-btn-toggle${state.showClosed ? " active" : ""}" id="btn-toggle-closed">
+    ${state.showClosed ? "Ocultar cerrados" : `Cerrados (${closedCount})`}
+  </button>`;
+  $$(".sort-btn[data-sort]", bar).forEach(b =>
     b.addEventListener("click", () => { state.matchSort = b.dataset.sort; renderMatches(); })
   );
+  const toggleBtn = $("#btn-toggle-closed");
+  if (toggleBtn) toggleBtn.addEventListener("click", () => { state.showClosed = !state.showClosed; renderMatches(); });
 }
 
 /* ---------- Vista PARTIDOS ---------- */
@@ -304,9 +312,13 @@ function renderMatches() {
   const list = $("#matches-list");
   const preds = myPreds();
   let matches = matchesArray().filter((m) => m.round === state.round);
+  if (!state.showClosed) matches = matches.filter(m => !isLocked(m));
 
   list.innerHTML = "";
-  if (!matches.length) { list.innerHTML = `<p class="empty">No hay partidos en esta ronda todavía.</p>`; return; }
+  if (!matches.length) {
+    list.innerHTML = `<p class="empty">${state.showClosed ? "No hay partidos en esta ronda todavía." : "No hay partidos abiertos. Pulsa <b>Cerrados</b> para ver todos."}</p>`;
+    return;
+  }
 
   if (state.matchSort === "fecha") {
     matches = matches.slice().sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
@@ -675,13 +687,24 @@ function renderStats() {
 /* ---------- Vista ADMIN ---------- */
 function renderAdmin() {
   renderRoundFilter("#admin-round-filter", state.adminRound, (r) => { state.adminRound = r; renderAdmin(); });
+
+  const sortBar = $("#admin-sort-bar");
+  if (sortBar) {
+    const playedCount = matchesArray().filter(m => m.round === state.adminRound && m.played).length;
+    sortBar.innerHTML = `<button class="sort-btn sort-btn-toggle${state.adminShowPlayed ? " active" : ""}" id="btn-admin-toggle-played">
+      ${state.adminShowPlayed ? "Ocultar finalizados" : `Finalizados (${playedCount})`}
+    </button>`;
+    const btn = $("#btn-admin-toggle-played");
+    if (btn) btn.addEventListener("click", () => { state.adminShowPlayed = !state.adminShowPlayed; renderAdmin(); });
+  }
+
   const list = $("#admin-list");
   const matches = matchesArray()
-    .filter((m) => m.round === state.adminRound)
+    .filter((m) => m.round === state.adminRound && (state.adminShowPlayed || !m.played))
     .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
   list.innerHTML = "";
   matches.forEach((m) => list.appendChild(adminCard(m)));
-  if (!matches.length) list.innerHTML = `<p class="empty">Sin partidos en esta ronda.</p>`;
+  if (!matches.length) list.innerHTML = `<p class="empty">${state.adminShowPlayed ? "Sin partidos en esta ronda." : "Sin partidos pendientes. Pulsa <b>Finalizados</b> para ver todos."}</p>`;
 }
 
 function adminCard(m) {
