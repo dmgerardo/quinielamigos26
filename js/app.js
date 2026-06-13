@@ -241,6 +241,12 @@ function enterTournament(code) {
           $("#t-name").textContent = state.data.name;
           $("#t-code").textContent = code;
           $("#u-name").textContent = state.name;
+          const verEl = $("#app-ver");
+          if (verEl) {
+            const s = document.querySelector('script[src*="app.js"]');
+            const m = s && s.src.match(/[?&]v=(\d+)/);
+            if (m) verEl.textContent = "v" + m[1];
+          }
           toggleAdminTab();
           resolve();
         }

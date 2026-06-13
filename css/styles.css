@@ -135,6 +135,7 @@ input { font-family: inherit; }
   border: 1px solid rgba(20,224,163,.3); padding: 3px 9px; border-radius: 999px; font-weight: 700;
 }
 .copy-ic { opacity: .7; }
+.app-ver { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: .5px; opacity: .6; }
 .topbar-user { display: flex; align-items: center; gap: 8px; }
 .user-pill {
   font-size: 13px; font-weight: 600; background: var(--card-2); padding: 7px 12px;
