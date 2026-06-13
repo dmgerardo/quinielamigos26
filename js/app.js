@@ -621,7 +621,7 @@ function anyMatchPlayed() {
   return Object.values(state.data.matches || {}).some((m) => m.played);
 }
 function isChampLocked() {
-  return anyMatchPlayed() || Date.now() >= CHAMPION_DEADLINE;
+  return Date.now() >= CHAMPION_DEADLINE;
 }
 
 function openChampionPicker() {
