@@ -734,11 +734,13 @@ function adminCard(m) {
     </div>
     <button class="btn btn-accent" style="margin-top:10px" id="save-${m.id}">${m.played ? "Actualizar resultado" : "Guardar resultado"}</button>
     ${editable ? `<button class="match-action" id="edit-${m.id}" style="margin-top:8px">✏️ Editar equipos (eliminatoria)</button>` : ""}
+    <button class="match-action" id="info-${m.id}" style="margin-top:8px">📅 Editar fecha / sede</button>
     ${m.played ? `<button class="match-action" id="clear-${m.id}" style="margin-top:8px">↺ Marcar como no jugado</button>` : ""}
   `;
 
   el.querySelector("#save-" + m.id).addEventListener("click", () => adminSaveResult(m.id));
   if (editable) el.querySelector("#edit-" + m.id).addEventListener("click", () => adminEditTeams(m.id));
+  el.querySelector("#info-" + m.id).addEventListener("click", () => adminEditMatchInfo(m.id));
   if (m.played) el.querySelector("#clear-" + m.id).addEventListener("click", () => adminClearResult(m.id));
   return el;
 }
@@ -787,6 +789,52 @@ function adminEditTeams(matchId) {
     closeModal(); toast("Equipos actualizados ✓");
   });
   $("#cancel-teams").addEventListener("click", closeModal);
+  openModal();
+}
+
+function adminEditMatchInfo(matchId) {
+  const m = state.data.matches[matchId];
+  // Convierte el kickoff UTC a valor datetime-local en hora local del usuario
+  let localDt = "";
+  if (m.kickoff) {
+    const d = new Date(m.kickoff);
+    const pad = n => String(n).padStart(2, "0");
+    localDt = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  $("#modal-card").innerHTML = `
+    <div class="modal-title">📅 Editar partido</div>
+    <div class="modal-sub">${esc(teamName(m.teamA, m.slotA))} vs ${esc(teamName(m.teamB, m.slotB))}</div>
+    <div class="champ-picker">
+      <label class="field">
+        <span>Fecha y hora <small style="color:var(--muted)">(hora local)</small></span>
+        <input id="edit-kickoff" type="datetime-local" value="${localDt}" style="color-scheme:dark;width:100%" />
+      </label>
+      <label class="field">
+        <span>Sede</span>
+        <input id="edit-venue" class="champ-select" type="text" maxlength="40" value="${esc(m.venue || "")}" placeholder="Ej. Mexico City" />
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="save-match-info">Guardar</button>
+      <button class="btn btn-ghost" id="cancel-match-info">Cancelar</button>
+    </div>
+  `;
+  $("#save-match-info").addEventListener("click", async () => {
+    const dtVal = $("#edit-kickoff").value;
+    const venue = $("#edit-venue").value.trim();
+    const update = { venue };
+    if (dtVal) {
+      const d = new Date(dtVal); // datetime-local se parsea como hora local
+      update.kickoff = d.toISOString();
+      update.kickoffMs = d.getTime();
+    }
+    try {
+      await db.ref(`tournaments/${state.code}/matches/${matchId}`).update(update);
+      closeModal();
+      toast("Partido actualizado ✓");
+    } catch (e) { toast("Error: " + e.message, true); }
+  });
+  $("#cancel-match-info").addEventListener("click", closeModal);
   openModal();
 }
 
