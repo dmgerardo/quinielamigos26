@@ -290,12 +290,12 @@ function renderSortBar() {
     { key: "grupo", label: "Por grupo" },
     { key: "fecha", label: "Por fecha" }
   ];
-  const closedCount = matchesArray().filter(m => m.round === state.round && isLocked(m)).length;
+  const finCount = matchesArray().filter(m => m.round === state.round && m.played).length;
   bar.innerHTML = opts.map(o =>
     `<button class="sort-btn${state.matchSort === o.key ? " active" : ""}" data-sort="${o.key}">${o.label}</button>`
   ).join("") +
   `<button class="sort-btn sort-btn-toggle${state.showClosed ? " active" : ""}" id="btn-toggle-closed">
-    ${state.showClosed ? "Ocultar cerrados" : `Cerrados (${closedCount})`}
+    ${state.showClosed ? "Ocultar finalizados" : `Finalizados (${finCount})`}
   </button>`;
   $$(".sort-btn[data-sort]", bar).forEach(b =>
     b.addEventListener("click", () => { state.matchSort = b.dataset.sort; renderMatches(); })
@@ -312,7 +312,7 @@ function renderMatches() {
   const list = $("#matches-list");
   const preds = myPreds();
   let matches = matchesArray().filter((m) => m.round === state.round);
-  if (!state.showClosed) matches = matches.filter(m => !isLocked(m));
+  if (!state.showClosed) matches = matches.filter(m => !m.played);
 
   list.innerHTML = "";
   if (!matches.length) {
