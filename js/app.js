@@ -358,8 +358,8 @@ function renderMatches() {
 
 // Las predicciones se cierran 15 minutos antes del inicio del partido (anti-trampa).
 const LOCK_BEFORE_MS = 15 * 60 * 1000;
-// Fecha límite para elegir campeón: viernes 19 jun 2026 al final del día (hora local).
-const CHAMPION_DEADLINE = new Date("2026-06-20T00:00:00").getTime();
+// Fecha límite para elegir campeón: sábado 20 jun 2026 al final del día (hora local).
+const CHAMPION_DEADLINE = new Date("2026-06-21T00:00:00").getTime();
 function lockTime(m) { return typeof m.kickoffMs === "number" ? m.kickoffMs - LOCK_BEFORE_MS : Infinity; }
 function isLocked(m) { return m.played || Date.now() >= lockTime(m); }
 
