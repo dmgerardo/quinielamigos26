@@ -250,7 +250,7 @@ function enterTournament(code) {
           toggleAdminTab();
           resolve();
         }
-        render();
+        scheduleRender();
       },
       (err) => { if (first) reject(err); }
     );
@@ -263,13 +263,39 @@ function toggleAdminTab() {
   $(".admin-only").classList.toggle("hidden", !isAdmin());
 }
 
-/* ===================== RENDER PRINCIPAL ===================== */
-function render() {
+/* ===================== RENDER PRINCIPAL =====================
+ * Optimización de performance:
+ *  · Coalescing: Firebase puede emitir muchos snapshots seguidos (p. ej. cuando
+ *    varios participantes guardan a la vez). En lugar de reconstruir el DOM en
+ *    cada uno, agendamos un único render por frame con requestAnimationFrame.
+ *  · Render por vista: solo se reconstruye la pestaña visible. Las demás se
+ *    marcan como "pendientes" y se reconstruyen al abrirlas (switchView).
+ */
+const _dirtyViews = new Set();
+let _renderScheduled = false;
+
+function renderView(v) {
   if (!state.data) return;
-  renderMatches();
-  renderRanking();
-  renderStats();
-  if (isAdmin()) renderAdmin();
+  switch (v) {
+    case "matches": renderMatches(); break;
+    case "ranking": renderRanking(); break;
+    case "stats":   renderStats();   break;
+    case "admin":   if (isAdmin()) renderAdmin(); break;
+  }
+  _dirtyViews.delete(v);
+}
+
+// Punto de entrada desde el listener de Firebase: marca todo como pendiente y
+// agenda un solo render (de la vista visible) en el próximo frame.
+function scheduleRender() {
+  if (!state.data) return;
+  ["matches", "ranking", "stats", "admin"].forEach((v) => _dirtyViews.add(v));
+  if (_renderScheduled) return;
+  _renderScheduled = true;
+  requestAnimationFrame(() => {
+    _renderScheduled = false;
+    renderView(state.view);
+  });
 }
 
 function matchesArray() {
@@ -380,6 +406,14 @@ const _DTF = new Intl.DateTimeFormat("es-MX", {
   hour: "2-digit", minute: "2-digit", hour12: false
 });
 const _DDF = new Intl.DateTimeFormat("es-MX", { weekday: "short", day: "numeric", month: "long" });
+// Sello de tiempo con fecha + hora + segundos para auditoría (hora local del usuario)
+const _AUDITF = new Intl.DateTimeFormat("es-MX", {
+  year: "numeric", month: "2-digit", day: "2-digit",
+  hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+});
+function fmtStamp(ms) {
+  return (typeof ms === "number" && isFinite(ms)) ? _AUDITF.format(new Date(ms)).replace(/,/g, "") : "—";
+}
 function fmtKickoff(iso) {
   if (!iso) return "";
   const s = _DTF.format(new Date(iso)).replace(/,/g, "");
@@ -727,10 +761,18 @@ function adminCard(m) {
       <span class="vs">VS</span>
       <div class="team"><span class="flag">${esc(m.teamB.flag)}</span><span class="tname">${esc(teamName(m.teamB, m.slotB))}</span></div>
     </div>
-    <div class="score-pill">
-      <input class="box" id="ra-${m.id}" type="number" min="0" max="30" value="${m.realA != null ? m.realA : ""}" placeholder="-" inputmode="numeric" />
+    <div class="score-pill admin-steppers">
+      <div class="stepper">
+        <button type="button" data-d="-1" data-s="a">−</button>
+        <span class="num" id="ra-${m.id}">${m.realA != null ? m.realA : 0}</span>
+        <button type="button" data-d="1" data-s="a">+</button>
+      </div>
       <span class="sep">–</span>
-      <input class="box" id="rb-${m.id}" type="number" min="0" max="30" value="${m.realB != null ? m.realB : ""}" placeholder="-" inputmode="numeric" />
+      <div class="stepper">
+        <button type="button" data-d="-1" data-s="b">−</button>
+        <span class="num" id="rb-${m.id}">${m.realB != null ? m.realB : 0}</span>
+        <button type="button" data-d="1" data-s="b">+</button>
+      </div>
     </div>
     <button class="btn btn-accent" style="margin-top:10px" id="save-${m.id}">${m.played ? "Actualizar resultado" : "Guardar resultado"}</button>
     ${editable ? `<button class="match-action" id="edit-${m.id}" style="margin-top:8px">✏️ Editar equipos (eliminatoria)</button>` : ""}
@@ -738,6 +780,13 @@ function adminCard(m) {
     ${m.played ? `<button class="match-action" id="clear-${m.id}" style="margin-top:8px">↺ Marcar como no jugado</button>` : ""}
   `;
 
+  el.querySelectorAll(".admin-steppers .stepper button").forEach((b) =>
+    b.addEventListener("click", () => {
+      const span = el.querySelector("#" + (b.dataset.s === "a" ? "ra-" : "rb-") + m.id);
+      const v = (parseInt(span.textContent, 10) || 0) + Number(b.dataset.d);
+      span.textContent = Math.max(0, Math.min(30, v));
+    })
+  );
   el.querySelector("#save-" + m.id).addEventListener("click", () => adminSaveResult(m.id));
   if (editable) el.querySelector("#edit-" + m.id).addEventListener("click", () => adminEditTeams(m.id));
   el.querySelector("#info-" + m.id).addEventListener("click", () => adminEditMatchInfo(m.id));
@@ -746,8 +795,8 @@ function adminCard(m) {
 }
 
 async function adminSaveResult(matchId) {
-  const a = parseInt($("#ra-" + matchId).value, 10);
-  const b = parseInt($("#rb-" + matchId).value, 10);
+  const a = parseInt($("#ra-" + matchId).textContent, 10);
+  const b = parseInt($("#rb-" + matchId).textContent, 10);
   if (isNaN(a) || isNaN(b) || a < 0 || b < 0) { toast("Ingresa un marcador válido", true); return; }
   try {
     await db.ref(`tournaments/${state.code}/matches/${matchId}`).update({ realA: a, realB: b, played: true });
@@ -924,11 +973,138 @@ function openAdminReport() {
       <div class="rp-matches">${matchBlocks}</div>
     </div>
     <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-primary" id="print-report">🖨️ Versión imprimible (auditoría)</button>
       <button class="btn btn-ghost" id="close-report">Cerrar</button>
     </div>
   `;
+  $("#print-report").addEventListener("click", openAuditReport);
   $("#close-report").addEventListener("click", closeModal);
   openModal();
+}
+
+/* ---------- Reporte imprimible para auditoría ----------
+ * Abre una ventana nueva con un documento de impresión (tema claro) que incluye:
+ *  · Tabla resumen con puntuaciones.
+ *  · Detalle por participante con CADA pronóstico y la fecha/hora exacta en que
+ *    fue capturado (campo `at`), para fines de auditoría.
+ * Se genera de forma autónoma (no depende del modal en pantalla).
+ */
+function openAuditReport() {
+  const matchesMap = state.data.matches || {};
+  const parts = state.data.participants || {};
+  const realChamp = getRealChampion(matchesMap);
+
+  const matchById = matchesMap;
+  const orderedMatchIds = Object.values(matchesMap)
+    .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0))
+    .map((m) => m.id);
+
+  const pids = Object.keys(parts);
+  const scored = pids.map((pid) => {
+    const preds = predForView(pid);
+    const s = computeUserScore(matchesMap, preds, parts[pid].championPick, realChamp);
+    return { pid, name: parts[pid].name, champ: parts[pid].championPick || "—", preds, ...s };
+  });
+  scored.sort((a, b) => b.total - a.total || b.exact - a.exact || a.name.localeCompare(b.name));
+
+  const esc2 = esc; // reutiliza el escape de la app
+  const genStamp = fmtStamp(Date.now());
+
+  // Tabla resumen
+  const summaryRows = scored.map((r, i) => `
+    <tr>
+      <td class="c">${i + 1}</td>
+      <td>${esc2(r.name)}</td>
+      <td class="c">${r.total}</td>
+      <td class="c">${r.correct}</td>
+      <td class="c">${r.exact}</td>
+      <td>${esc2(r.champ)}</td>
+      <td class="c">${Object.keys(r.preds).length}</td>
+    </tr>`).join("");
+
+  // Detalle por participante con sello de captura
+  const detailBlocks = scored.map((r) => {
+    const rows = orderedMatchIds.filter((mid) => r.preds[mid]).map((mid) => {
+      const m = matchById[mid];
+      const pred = r.preds[mid];
+      const matchLbl = `${teamName(m.teamA, m.slotA)} vs ${teamName(m.teamB, m.slotB)}`;
+      const result = m.played ? `${m.realA}–${m.realB}` : "—";
+      const pts = (pred && m.played) ? "+" + scoreMatch(pred, m.realA, m.realB) : "";
+      return `<tr>
+        <td>${esc2(matchLbl)}</td>
+        <td class="c">${pred.a}–${pred.b}</td>
+        <td class="c">${fmtStamp(pred.at)}</td>
+        <td class="c">${result}</td>
+        <td class="c">${pts}</td>
+      </tr>`;
+    }).join("");
+    const body = rows || `<tr><td colspan="5" class="muted">Sin pronósticos capturados.</td></tr>`;
+    return `
+      <div class="audit-part">
+        <h3>${esc2(r.name)} <span class="muted">· Campeón: ${esc2(r.champ)} · Total: ${r.total} pts</span></h3>
+        <table class="audit-tbl">
+          <thead><tr><th>Partido</th><th>Pronóstico</th><th>Capturado (fecha y hora)</th><th>Resultado</th><th>Pts</th></tr></thead>
+          <tbody>${body}</tbody>
+        </table>
+      </div>`;
+  }).join("");
+
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
+    <title>Auditoría — ${esc2(state.data.name || state.code)}</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #111; margin: 24px; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      h2 { font-size: 14px; margin: 22px 0 8px; border-bottom: 2px solid #333; padding-bottom: 4px; }
+      h3 { font-size: 13px; margin: 14px 0 4px; }
+      .muted { color: #666; font-weight: 400; font-size: 11px; }
+      .meta { font-size: 11px; color: #444; margin-bottom: 10px; }
+      table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      th, td { border: 1px solid #bbb; padding: 4px 6px; text-align: left; }
+      th { background: #eee; font-size: 10px; text-transform: uppercase; letter-spacing: .3px; }
+      td.c, th.c { text-align: center; }
+      .audit-part { margin-bottom: 14px; page-break-inside: avoid; }
+      tfoot { font-size: 10px; color: #777; }
+      @media print {
+        body { margin: 12mm; }
+        .noprint { display: none; }
+        h2 { page-break-before: auto; }
+      }
+      .noprint { margin-bottom: 16px; }
+      .noprint button { font-size: 13px; padding: 8px 16px; margin-right: 8px; cursor: pointer; }
+    </style></head><body>
+    <div class="noprint">
+      <button onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      <button onclick="window.close()">Cerrar</button>
+    </div>
+    <h1>Reporte de auditoría — ${esc2(state.data.name || state.code)}</h1>
+    <div class="meta">
+      Código de torneo: <b>${esc2(state.code)}</b> ·
+      Participantes: <b>${scored.length}</b> ·
+      Generado: <b>${genStamp}</b>${realChamp ? ` · Campeón: <b>${esc2(realChamp)}</b>` : ""}
+    </div>
+
+    <h2>Resumen de puntuaciones</h2>
+    <table>
+      <thead><tr><th class="c">#</th><th>Participante</th><th class="c">Pts</th><th class="c">Aciertos</th><th class="c">Exactos</th><th>Campeón</th><th class="c">Pronósticos</th></tr></thead>
+      <tbody>${summaryRows}</tbody>
+    </table>
+
+    <h2>Detalle de pronósticos por participante</h2>
+    ${detailBlocks}
+
+    <p class="muted" style="margin-top:18px">
+      Nota: la columna «Capturado» refleja la marca de tiempo registrada en la base de datos al momento de guardar
+      cada pronóstico (hora local). Los pronósticos capturados por el administrador en nombre de un participante se
+      registran con hora de 1 minuto antes del cierre del partido. «—» indica que no existe marca de tiempo.
+    </p>
+    </body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) { toast("Permite las ventanas emergentes para abrir el reporte imprimible", true); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
 }
 
 /* ---------- Captura de predicción por participante (solo admin) ---------- */
@@ -1056,6 +1232,9 @@ function switchView(v) {
   $$(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.view === v));
   $$(".view").forEach((x) => x.classList.remove("active"));
   $("#view-" + v).classList.add("active");
+  // Si la vista quedó pendiente por un snapshot mientras no era visible, la
+  // reconstruimos ahora con los datos más recientes.
+  if (_dirtyViews.has(v)) renderView(v);
 }
 
 function showScreen(name) {
