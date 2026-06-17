@@ -2134,6 +2134,14 @@ function buildInitialMatches() {
   return matches;
 }
 
+// Bandera (emoji) de un equipo a partir de su nombre. "🏳️" si no se encuentra.
+function teamFlag(name) {
+  for (const g of Object.values(DEFAULT_GROUPS)) {
+    for (const [n, f] of g) if (n === name) return f;
+  }
+  return "🏳️";
+}
+
 // Lista de equipos (para el selector de campeón)
 function allTeamNames() {
   const set = [];

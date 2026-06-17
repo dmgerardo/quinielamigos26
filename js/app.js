@@ -811,17 +811,34 @@ async function adminClearResult(matchId) {
   } catch (e) { toast("Error: " + e.message, true); }
 }
 
+// Opciones de un <select> de equipos, agrupadas por grupo (A–L) con bandera.
+// `selected` preselecciona el equipo actual si ya estaba definido.
+function teamSelectOptions(selected) {
+  let html = `<option value="">— Selecciona equipo —</option>`;
+  Object.keys(DEFAULT_GROUPS).forEach((g) => {
+    html += `<optgroup label="Grupo ${g}">`;
+    DEFAULT_GROUPS[g].forEach(([name, flag]) => {
+      const sel = name === selected ? " selected" : "";
+      html += `<option value="${esc(name)}"${sel}>${flag} ${esc(name)}</option>`;
+    });
+    html += `</optgroup>`;
+  });
+  return html;
+}
+
 function adminEditTeams(matchId) {
   const m = state.data.matches[matchId];
+  const curA = m.teamA.name === "Por definir" ? "" : m.teamA.name;
+  const curB = m.teamB.name === "Por definir" ? "" : m.teamB.name;
   $("#modal-card").innerHTML = `
     <div class="modal-title">Editar equipos</div>
     <div class="modal-sub">${roundLabel(m.round)} — define los equipos clasificados<br>
-      <small style="color:var(--muted)">${m.slotA || "Equipo A"} &nbsp;vs&nbsp; ${m.slotB || "Equipo B"}</small></div>
+      <small style="color:var(--muted)">${esc(m.slotA || "Equipo A")} &nbsp;vs&nbsp; ${esc(m.slotB || "Equipo B")}</small></div>
     <div class="champ-picker">
-      <label class="field"><span>Equipo A (nombre)</span><input class="champ-select" id="ea-name" value="${esc(m.teamA.name === "Por definir" ? "" : m.teamA.name)}" placeholder="${esc(m.slotA || "Ej. Brasil")}" /></label>
-      <label class="field"><span>Bandera A (emoji)</span><input class="champ-select" id="ea-flag" value="${esc(m.teamA.flag === "🏳️" ? "" : m.teamA.flag)}" placeholder="🇧🇷" maxlength="8" /></label>
-      <label class="field"><span>Equipo B (nombre)</span><input class="champ-select" id="eb-name" value="${esc(m.teamB.name === "Por definir" ? "" : m.teamB.name)}" placeholder="${esc(m.slotB || "Ej. Francia")}" /></label>
-      <label class="field"><span>Bandera B (emoji)</span><input class="champ-select" id="eb-flag" value="${esc(m.teamB.flag === "🏳️" ? "" : m.teamB.flag)}" placeholder="🇫🇷" maxlength="8" /></label>
+      <label class="field"><span>Equipo A <small style="color:var(--muted)">(${esc(m.slotA || "")})</small></span>
+        <select class="champ-select" id="ea-name">${teamSelectOptions(curA)}</select></label>
+      <label class="field"><span>Equipo B <small style="color:var(--muted)">(${esc(m.slotB || "")})</small></span>
+        <select class="champ-select" id="eb-name">${teamSelectOptions(curB)}</select></label>
     </div>
     <div class="modal-actions">
       <button class="btn btn-primary" id="save-teams">Guardar equipos</button>
@@ -829,11 +846,12 @@ function adminEditTeams(matchId) {
     </div>
   `;
   $("#save-teams").addEventListener("click", async () => {
-    const aN = $("#ea-name").value.trim(), bN = $("#eb-name").value.trim();
-    if (!aN || !bN) { toast("Escribe ambos equipos", true); return; }
+    const aN = $("#ea-name").value, bN = $("#eb-name").value;
+    if (!aN || !bN) { toast("Selecciona ambos equipos", true); return; }
+    if (aN === bN) { toast("Los dos equipos no pueden ser el mismo", true); return; }
     await db.ref(`tournaments/${state.code}/matches/${matchId}`).update({
-      teamA: { name: aN, flag: $("#ea-flag").value.trim() || "🏳️" },
-      teamB: { name: bN, flag: $("#eb-flag").value.trim() || "🏳️" }
+      teamA: { name: aN, flag: teamFlag(aN) },
+      teamB: { name: bN, flag: teamFlag(bN) }
     });
     closeModal(); toast("Equipos actualizados ✓");
   });
