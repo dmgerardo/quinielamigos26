@@ -25,6 +25,7 @@ const state = {
   showClosed: false,     // ocultar partidos cerrados en vista de predicciones
   adminRound: "grupos",
   adminShowPlayed: false, // ocultar partidos con resultado en vista admin
+  adminShowFuture: false, // ocultar partidos de mañana en adelante en vista admin
   data: null,        // snapshot completo del torneo
   ref: null          // referencia firebase con listener activo
 };
@@ -725,26 +726,48 @@ function renderStats() {
 }
 
 /* ---------- Vista ADMIN ---------- */
+// Inicio del día de mañana (medianoche local). Un partido es "futuro" si su
+// inicio cae mañana o después.
+function startOfTomorrowMs() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
 function renderAdmin() {
   renderRoundFilter("#admin-round-filter", state.adminRound, (r) => { state.adminRound = r; renderAdmin(); });
 
+  const tomorrow = startOfTomorrowMs();
+  const isFuture = (m) => typeof m.kickoffMs === "number" && m.kickoffMs >= tomorrow;
+
   const sortBar = $("#admin-sort-bar");
   if (sortBar) {
-    const playedCount = matchesArray().filter(m => m.round === state.adminRound && m.played).length;
-    sortBar.innerHTML = `<button class="sort-btn sort-btn-toggle${state.adminShowPlayed ? " active" : ""}" id="btn-admin-toggle-played">
-      ${state.adminShowPlayed ? "Ocultar finalizados" : `Finalizados (${playedCount})`}
-    </button>`;
-    const btn = $("#btn-admin-toggle-played");
-    if (btn) btn.addEventListener("click", () => { state.adminShowPlayed = !state.adminShowPlayed; renderAdmin(); });
+    const inRound = matchesArray().filter((m) => m.round === state.adminRound);
+    const playedCount = inRound.filter((m) => m.played).length;
+    const futureCount = inRound.filter((m) => !m.played && isFuture(m)).length;
+    sortBar.innerHTML = `
+      <button class="sort-btn sort-btn-toggle${state.adminShowFuture ? " active" : ""}" id="btn-admin-toggle-future">
+        ${state.adminShowFuture ? "Ocultar próximos" : `Próximos (${futureCount})`}
+      </button>
+      <button class="sort-btn sort-btn-toggle${state.adminShowPlayed ? " active" : ""}" id="btn-admin-toggle-played">
+        ${state.adminShowPlayed ? "Ocultar finalizados" : `Finalizados (${playedCount})`}
+      </button>`;
+    const fBtn = $("#btn-admin-toggle-future");
+    if (fBtn) fBtn.addEventListener("click", () => { state.adminShowFuture = !state.adminShowFuture; renderAdmin(); });
+    const pBtn = $("#btn-admin-toggle-played");
+    if (pBtn) pBtn.addEventListener("click", () => { state.adminShowPlayed = !state.adminShowPlayed; renderAdmin(); });
   }
 
   const list = $("#admin-list");
   const matches = matchesArray()
-    .filter((m) => m.round === state.adminRound && (state.adminShowPlayed || !m.played))
+    .filter((m) => m.round === state.adminRound)
+    .filter((m) => state.adminShowPlayed || !m.played)
+    .filter((m) => state.adminShowFuture || !isFuture(m))
     .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
   list.innerHTML = "";
   matches.forEach((m) => list.appendChild(adminCard(m)));
-  if (!matches.length) list.innerHTML = `<p class="empty">${state.adminShowPlayed ? "Sin partidos en esta ronda." : "Sin partidos pendientes. Pulsa <b>Finalizados</b> para ver todos."}</p>`;
+  if (!matches.length) list.innerHTML = `<p class="empty">No hay partidos para capturar en esta ronda. Pulsa <b>Próximos</b> o <b>Finalizados</b> para ver más.</p>`;
 }
 
 function adminCard(m) {
