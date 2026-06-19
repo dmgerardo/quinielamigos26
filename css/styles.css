@@ -398,6 +398,15 @@ th.rp-champ,td.rp-champ{ text-align: left; font-size: 12px; color: var(--muted);
 .rp-pts.pos  { background: rgba(20,224,163,.15); color: var(--accent); }
 .rp-pts.zero { background: rgba(255,255,255,.07); color: var(--muted); }
 
+/* Reporte de puntos por partido (matriz Ganados / Acumulados) */
+.pr-table th, .pr-table td { white-space: nowrap; }
+.pr-table th.rp-num, .pr-table td.rp-num { text-align: center; min-width: 38px; }
+.pr-table th.pr-block { text-align: center; color: var(--text); background: var(--card-2); border-bottom: 1px solid var(--line); }
+.pr-table .pr-acum { color: var(--accent); }
+.pr-table th.pr-acum { color: var(--accent); }
+.pr-res { color: var(--muted); font-weight: 400; font-size: 11px; margin-left: 4px; }
+.pr-table td.rp-name { min-width: 150px; font-size: 12px; }
+
 /* Predicciones del grupo (partidos en curso) */
 .live-preds { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
 .live-preds-title { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }

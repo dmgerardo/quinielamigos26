@@ -616,6 +616,8 @@ function renderRanking() {
   const list = $("#ranking-list");
   if (!rows.length) { list.innerHTML = `<p class="empty">Sin participantes aún.</p>`; return; }
 
+  const pointsBtn = `<button class="btn btn-ghost" id="btn-points-report" style="width:100%;margin-bottom:12px">📈 Reporte de puntos por partido</button>`;
+
   const tableRows = rows.map((r, i) => {
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `<span class="rk-pos">${i + 1}</span>`;
     const isMe = r.pid === state.playerKey;
@@ -634,6 +636,7 @@ function renderRanking() {
   }).join("");
 
   list.innerHTML = `
+    ${pointsBtn}
     <div class="rp-table-wrap">
       <table class="rp-table">
         <thead>
@@ -650,6 +653,141 @@ function renderRanking() {
       </table>
     </div>
   `;
+  const prBtn = $("#btn-points-report");
+  if (prBtn) prBtn.addEventListener("click", openPointsReport);
+}
+
+/* ---------- Reporte de puntos por partido (ganados y acumulados) ----------
+ * Matriz tipo planilla: filas = partidos jugados (orden cronológico), con un
+ * bloque de "Puntos Ganados" (0/3/4 por partido) y otro de "Puntos Acumulados"
+ * (suma corrida), una columna por participante. Botones para mostrar/ocultar
+ * cada bloque. El orden de participantes sigue el del ranking.
+ */
+let _ptsRep = { ganados: true, acum: true };
+
+function pointsReportData() {
+  const matchesMap = state.data.matches || {};
+  const parts = state.data.participants || {};
+  const preds = state.data.predictions || {};
+  const realChamp = getRealChampion(matchesMap);
+
+  const order = Object.keys(parts).map((pid) => {
+    const s = computeUserScore(matchesMap, predForView(pid), parts[pid].championPick, realChamp);
+    return { pid, name: parts[pid].name, total: s.total, exact: s.exact };
+  }).sort((a, b) => b.total - a.total || b.exact - a.exact || a.name.localeCompare(b.name));
+
+  const played = Object.values(matchesMap)
+    .filter((m) => m.played)
+    .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
+
+  const cum = {};
+  order.forEach((p) => { cum[p.pid] = 0; });
+  const rows = played.map((m) => {
+    const cells = order.map((p) => {
+      const pred = preds[m.id] && preds[m.id][p.pid];
+      const won = scoreMatch(pred, m.realA, m.realB);
+      cum[p.pid] += won;
+      return { won, acum: cum[p.pid] };
+    });
+    return {
+      label: `${teamName(m.teamA, m.slotA)} vs ${teamName(m.teamB, m.slotB)}`,
+      result: `${m.realA}–${m.realB}`,
+      cells
+    };
+  });
+  return { order, rows };
+}
+
+function pointsReportTableHtml(data, flags) {
+  const { order, rows } = data;
+  const P = order.length;
+  const showG = flags.ganados, showA = flags.acum;
+
+  let h1 = `<th class="rp-name"></th>`;
+  if (showG) h1 += `<th colspan="${P}" class="pr-block">Puntos Ganados</th>`;
+  if (showA) h1 += `<th colspan="${P}" class="pr-block pr-acum">Puntos Acumulados</th>`;
+
+  let h2 = `<th class="rp-name">PARTIDO</th>`;
+  if (showG) h2 += order.map((p) => `<th class="rp-num">${esc(p.name)}</th>`).join("");
+  if (showA) h2 += order.map((p) => `<th class="rp-num pr-acum">${esc(p.name)}</th>`).join("");
+
+  const body = rows.map((r) => {
+    let tds = `<td class="rp-name">${esc(r.label)} <span class="pr-res">${esc(r.result)}</span></td>`;
+    if (showG) tds += r.cells.map((c) => `<td class="rp-num">${c.won}</td>`).join("");
+    if (showA) tds += r.cells.map((c) => `<td class="rp-num pr-acum">${c.acum}</td>`).join("");
+    return `<tr>${tds}</tr>`;
+  }).join("");
+
+  return `<table class="rp-table pr-table">
+    <thead><tr>${h1}</tr><tr>${h2}</tr></thead>
+    <tbody>${body}</tbody>
+  </table>`;
+}
+
+function openPointsReport() {
+  const data = pointsReportData();
+  if (!data.rows.length) { toast("Aún no hay partidos jugados para el reporte", true); return; }
+  renderPointsReportModal(data);
+  openModal();
+}
+
+function renderPointsReportModal(data) {
+  const f = _ptsRep;
+  const tableHtml = (f.ganados || f.acum)
+    ? pointsReportTableHtml(data, f)
+    : `<p class="empty">Activa al menos un bloque (Ganados o Acumulados).</p>`;
+  $("#modal-card").innerHTML = `
+    <div class="modal-title">📈 Puntos por partido</div>
+    <div class="modal-sub">${esc(state.data.name || state.code)} · ${data.rows.length} partido(s) jugado(s)</div>
+    <div class="sort-bar" style="margin-bottom:10px">
+      <button class="sort-btn sort-btn-toggle${f.ganados ? " active" : ""}" id="pr-tg-ganados">Puntos ganados</button>
+      <button class="sort-btn sort-btn-toggle${f.acum ? " active" : ""}" id="pr-tg-acum">Puntos acumulados</button>
+    </div>
+    <div class="rp-scroll"><div class="rp-table-wrap">${tableHtml}</div></div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-primary" id="pr-print">🖨️ Versión imprimible</button>
+      <button class="btn btn-ghost" id="pr-close">Cerrar</button>
+    </div>
+  `;
+  $("#pr-tg-ganados").addEventListener("click", () => { _ptsRep.ganados = !_ptsRep.ganados; renderPointsReportModal(data); });
+  $("#pr-tg-acum").addEventListener("click", () => { _ptsRep.acum = !_ptsRep.acum; renderPointsReportModal(data); });
+  $("#pr-print").addEventListener("click", () => printPointsReport(data));
+  $("#pr-close").addEventListener("click", closeModal);
+}
+
+function printPointsReport(data) {
+  if (!_ptsRep.ganados && !_ptsRep.acum) { toast("Activa al menos un bloque para imprimir", true); return; }
+  const tableHtml = pointsReportTableHtml(data, _ptsRep);
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
+    <title>Puntos por partido — ${esc(state.data.name || state.code)}</title>
+    <style>
+      body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #111; margin: 24px; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      .meta { font-size: 11px; color: #444; margin-bottom: 12px; }
+      table { border-collapse: collapse; font-size: 11px; }
+      th, td { border: 1px solid #bbb; padding: 4px 7px; text-align: center; white-space: nowrap; }
+      td:first-child, th.rp-name { text-align: left; }
+      thead th { background: #eee; }
+      .pr-block { background: #d9e7ff; text-transform: uppercase; letter-spacing: .3px; }
+      .pr-block.pr-acum { background: #ffe9cf; }
+      .pr-res { color: #777; font-weight: 400; }
+      .noprint { margin-bottom: 14px; }
+      .noprint button { font-size: 13px; padding: 8px 16px; margin-right: 8px; cursor: pointer; }
+      @media print { .noprint { display: none; } body { margin: 10mm; } }
+    </style></head><body>
+    <div class="noprint">
+      <button onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      <button onclick="window.close()">Cerrar</button>
+    </div>
+    <h1>Puntos por partido — ${esc(state.data.name || state.code)}</h1>
+    <div class="meta">Código: <b>${esc(state.code)}</b> · ${data.rows.length} partido(s) jugado(s) · Generado: <b>${fmtStamp(Date.now())}</b></div>
+    ${tableHtml}
+    </body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { toast("Permite las ventanas emergentes para imprimir", true); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
 }
 
 function anyMatchPlayed() {
