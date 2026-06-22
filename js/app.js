@@ -68,10 +68,20 @@ async function init() {
   // Mostrar la pantalla de inicio con la lista "Mis quinielas".
   hideLoader();
   renderHistory();
+  loadPublicTournaments();
   const hist = loadHistory();
   if (hist.length && !$("#input-name").value) $("#input-name").value = hist[0].name;
+
+  // Si el participante tiene exactamente UN torneo registrado (y no llegó por un
+  // enlace con código específico), entra directo sin esperar clic. Para registrar
+  // o entrar a otro torneo, usa el botón "Salir" (⎋) dentro de la app: regresa a
+  // esta pantalla sin reingresar automáticamente.
+  if (hist.length === 1 && !urlCode) {
+    quickEnter(hist[0].code);
+    return;
+  }
+
   showScreen("auth");
-  loadPublicTournaments();
 }
 
 /* ===================== EVENTOS ESTÁTICOS ===================== */
