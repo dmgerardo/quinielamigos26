@@ -23,6 +23,7 @@ const state = {
   round: "grupos",
   matchSort: "fecha",    // "grupo" | "fecha"
   showClosed: false,     // ocultar partidos cerrados en vista de predicciones
+  showFuture: false,     // ocultar partidos de mañana en adelante en vista de predicciones
   adminRound: "grupos",
   adminShowPlayed: false, // ocultar partidos con resultado en vista admin
   adminShowFuture: false, // ocultar partidos de mañana en adelante en vista admin
@@ -333,16 +334,25 @@ function renderSortBar() {
     { key: "grupo", label: "Por grupo" },
     { key: "fecha", label: "Por fecha" }
   ];
-  const finCount = matchesArray().filter(m => m.round === state.round && m.played).length;
+  const tomorrow = startOfTomorrowMs();
+  const isFuture = (m) => typeof m.kickoffMs === "number" && m.kickoffMs >= tomorrow;
+  const inRound = matchesArray().filter(m => m.round === state.round);
+  const finCount = inRound.filter(m => m.played).length;
+  const futureCount = inRound.filter(m => !m.played && isFuture(m)).length;
   bar.innerHTML = opts.map(o =>
     `<button class="sort-btn${state.matchSort === o.key ? " active" : ""}" data-sort="${o.key}">${o.label}</button>`
   ).join("") +
+  `<button class="sort-btn sort-btn-toggle${state.showFuture ? " active" : ""}" id="btn-toggle-future">
+    ${state.showFuture ? "Ocultar próximos" : `Próximos (${futureCount})`}
+  </button>` +
   `<button class="sort-btn sort-btn-toggle${state.showClosed ? " active" : ""}" id="btn-toggle-closed">
     ${state.showClosed ? "Ocultar finalizados" : `Finalizados (${finCount})`}
   </button>`;
   $$(".sort-btn[data-sort]", bar).forEach(b =>
     b.addEventListener("click", () => { state.matchSort = b.dataset.sort; renderMatches(); })
   );
+  const futBtn = $("#btn-toggle-future");
+  if (futBtn) futBtn.addEventListener("click", () => { state.showFuture = !state.showFuture; renderMatches(); });
   const toggleBtn = $("#btn-toggle-closed");
   if (toggleBtn) toggleBtn.addEventListener("click", () => { state.showClosed = !state.showClosed; renderMatches(); });
 }
@@ -356,10 +366,14 @@ function renderMatches() {
   const preds = myPreds();
   let matches = matchesArray().filter((m) => m.round === state.round);
   if (!state.showClosed) matches = matches.filter(m => !m.played);
+  if (!state.showFuture) {
+    const tomorrow = startOfTomorrowMs();
+    matches = matches.filter(m => !(typeof m.kickoffMs === "number" && m.kickoffMs >= tomorrow));
+  }
 
   list.innerHTML = "";
   if (!matches.length) {
-    list.innerHTML = `<p class="empty">${state.showClosed ? "No hay partidos en esta ronda todavía." : "No hay partidos abiertos. Pulsa <b>Cerrados</b> para ver todos."}</p>`;
+    list.innerHTML = `<p class="empty">No hay partidos de hoy en esta ronda. Pulsa <b>Próximos</b> o <b>Finalizados</b> para ver más.</p>`;
     return;
   }
 
