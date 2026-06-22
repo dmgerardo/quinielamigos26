@@ -745,12 +745,14 @@ function renderPointsReportModal(data) {
     </div>
     <div class="rp-scroll"><div class="rp-table-wrap">${tableHtml}</div></div>
     <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-accent" id="pr-chart">📊 Gráfica de tendencias</button>
       <button class="btn btn-primary" id="pr-print">🖨️ Versión imprimible</button>
       <button class="btn btn-ghost" id="pr-close">Cerrar</button>
     </div>
   `;
   $("#pr-tg-ganados").addEventListener("click", () => { _ptsRep.ganados = !_ptsRep.ganados; renderPointsReportModal(data); });
   $("#pr-tg-acum").addEventListener("click", () => { _ptsRep.acum = !_ptsRep.acum; renderPointsReportModal(data); });
+  $("#pr-chart").addEventListener("click", () => openPointsChart(data));
   $("#pr-print").addEventListener("click", () => printPointsReport(data));
   $("#pr-close").addEventListener("click", closeModal);
 }
@@ -785,6 +787,106 @@ function printPointsReport(data) {
     </body></html>`;
   const w = window.open("", "_blank");
   if (!w) { toast("Permite las ventanas emergentes para imprimir", true); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+/* Gráfica de tendencias: líneas de puntos acumulados por participante a lo
+ * largo de los partidos jugados. Se abre en una ventana nueva (SVG, scroll
+ * horizontal e imprimible). */
+function openPointsChart(data) {
+  const { order, rows } = data;
+  if (!rows.length || !order.length) { toast("No hay datos para la gráfica", true); return; }
+
+  const N = rows.length;
+  const palette = ["#3aa0ff", "#ff7a3a", "#2ecc71", "#1fc4d6", "#e84393", "#f4d03f",
+                   "#9b59b6", "#e74c3c", "#16a085", "#e67e22", "#56d364", "#ff6ad5",
+                   "#c0c0c0", "#7f8cff", "#f78fb3", "#00b894"];
+
+  const series = order.map((p, i) => ({
+    name: p.name,
+    color: palette[i % palette.length],
+    vals: rows.map((r) => r.cells[i].acum)
+  }));
+
+  let maxAcum = 1;
+  series.forEach((s) => s.vals.forEach((v) => { if (v > maxAcum) maxAcum = v; }));
+  const maxY = Math.ceil(maxAcum / 10) * 10 || 10;
+
+  // Layout del SVG
+  const mL = 55, mR = 30, mT = 56, mB = 250;
+  const stepX = Math.max(28, Math.min(64, 1000 / Math.max(1, N - 1)));
+  const plotW = (N - 1) * stepX || 1;
+  const plotH = 430;
+  const W = mL + plotW + mR;
+  const H = mT + plotH + mB;
+  const xAt = (i) => mL + i * stepX;
+  const yAt = (v) => mT + plotH * (1 - v / maxY);
+
+  // Cuadrícula + etiquetas eje Y (cada 10)
+  let grid = "";
+  for (let v = 0; v <= maxY; v += 10) {
+    const yy = yAt(v);
+    grid += `<line x1="${mL}" y1="${yy}" x2="${mL + plotW}" y2="${yy}" stroke="#2a3a66" stroke-width="1"/>`;
+    grid += `<text x="${mL - 8}" y="${yy + 4}" text-anchor="end" font-size="12" fill="#9fb0d8">${v}</text>`;
+  }
+  // Eje Y y línea base
+  grid += `<line x1="${mL}" y1="${mT}" x2="${mL}" y2="${mT + plotH}" stroke="#46568a" stroke-width="1.5"/>`;
+  grid += `<line x1="${mL}" y1="${mT + plotH}" x2="${mL + plotW}" y2="${mT + plotH}" stroke="#46568a" stroke-width="1.5"/>`;
+
+  // Etiquetas eje X (rotadas)
+  let xlabels = "";
+  rows.forEach((r, i) => {
+    const xx = xAt(i);
+    const lbl = esc(`${r.label} ${r.result}`);
+    xlabels += `<text x="${xx}" y="${mT + plotH + 14}" transform="rotate(-60 ${xx} ${mT + plotH + 14})" text-anchor="end" font-size="11" fill="#c7d3f5">${lbl}</text>`;
+  });
+
+  // Líneas + puntos
+  let lines = "";
+  series.forEach((s) => {
+    const pts = s.vals.map((v, i) => `${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`).join(" ");
+    lines += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+    lines += s.vals.map((v, i) => `<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="2.6" fill="${s.color}"/>`).join("");
+  });
+
+  const svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Inter,Arial,sans-serif">
+    <rect width="${W}" height="${H}" fill="#0b1437"/>
+    <text x="${mL + plotW / 2}" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#ffffff">Tendencia de puntos acumulados</text>
+    ${grid}
+    ${lines}
+    ${xlabels}
+  </svg>`;
+
+  const legendHtml = series.map((s) =>
+    `<span class="lg"><i style="background:${s.color}"></i>${esc(s.name)}</span>`
+  ).join("");
+
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
+    <title>Tendencia de puntos — ${esc(state.data.name || state.code)}</title>
+    <style>
+      body { margin: 0; background: #0b1437; color: #e7ecff; font-family: Inter, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+      .bar { position: sticky; top: 0; background: #0b1437; padding: 12px 16px; border-bottom: 1px solid #2a3a66; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .bar button { font-size: 13px; padding: 8px 14px; cursor: pointer; border-radius: 8px; border: 1px solid #3a4566; background: #16204a; color: #e7ecff; }
+      .bar .info { font-size: 12px; color: #9fb0d8; }
+      .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 12px 16px 4px; font-size: 13px; }
+      .lg { display: inline-flex; align-items: center; gap: 6px; }
+      .lg i { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
+      .chart { overflow-x: auto; padding: 8px 16px 24px; }
+      @media print { .noprint { display: none; } .chart { overflow: visible; } }
+    </style></head><body>
+    <div class="bar noprint">
+      <button onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+      <button onclick="window.close()">Cerrar</button>
+      <span class="info">${esc(state.data.name || state.code)} · ${N} partido(s) jugado(s)</span>
+    </div>
+    <div class="legend">${legendHtml}</div>
+    <div class="chart">${svg}</div>
+    </body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) { toast("Permite las ventanas emergentes para abrir la gráfica", true); return; }
   w.document.open();
   w.document.write(html);
   w.document.close();
