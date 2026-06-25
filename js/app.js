@@ -1418,9 +1418,10 @@ function openAuditReport() {
 
     <p class="muted" style="margin-top:18px">
       Nota: la columna «Capturado» refleja la marca de tiempo registrada en la base de datos al guardar el pronóstico
-      (hora local). Si el pronóstico se modifica, se registra la fecha y hora de la última actualización, incluyendo las
-      capturas hechas por el administrador en nombre de un participante. La «antelación» es el tiempo entre esa marca y
-      el inicio del partido; no se muestra si el pronóstico se registró después del inicio. «—» indica que no existe marca de tiempo.
+      (hora local). Cuando el participante guarda o modifica su pronóstico, se registra la fecha y hora real de ese momento.
+      Los pronósticos capturados por el administrador en nombre de un participante se registran con hora de 16 minutos antes
+      del inicio del partido. La «antelación» es el tiempo entre esa marca y el inicio del partido; no se muestra si el pronóstico
+      se registró después del inicio. «—» indica que no existe marca de tiempo.
     </p>
     </body></html>`;
 
@@ -1433,22 +1434,42 @@ function openAuditReport() {
 
 /* ---------- Captura de predicción por participante (solo admin) ---------- */
 
+// Hora con la que se registra una predicción capturada por el administrador:
+// 16 minutos antes del inicio (1 min antes del cierre de 15 min). Se backdatea
+// para que quede como enviada justo antes del cierre y para cumplir la regla de
+// escritura del servidor (que sólo admite pronósticos previos al cierre), de modo
+// que el admin pueda capturar incluso con el partido en curso.
+function captureRecordedAt(m) {
+  const lt = lockTime(m); // kickoffMs - 15 min
+  return (isFinite(lt) ? lt : Date.now()) - 60 * 1000; // = kickoffMs - 16 min
+}
+
+// Inicio del día de hoy (medianoche local).
+function startOfTodayMs() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
 function openAdminCapture() {
   if (!isAdmin()) { toast("Solo el administrador puede capturar predicciones", true); return; }
   const parts = state.data.participants || {};
   const pids = Object.keys(parts).sort((a, b) =>
     (parts[a].name || "").localeCompare(parts[b].name || ""));
-  // Solo partidos con equipos definidos (sin "Por definir"), ordenados por inicio.
+  // Solo partidos de HOY con equipos definidos (sin "Por definir"), por inicio.
+  const startToday = startOfTodayMs();
+  const startTomorrow = startOfTomorrowMs();
   const matches = matchesArray()
     .filter((m) => m.teamA.name !== "Por definir" && m.teamB.name !== "Por definir")
+    .filter((m) => typeof m.kickoffMs === "number" && m.kickoffMs >= startToday && m.kickoffMs < startTomorrow)
     .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
 
   if (!pids.length) { toast("No hay participantes todavía", true); return; }
-  if (!matches.length) { toast("No hay partidos con equipos definidos", true); return; }
+  if (!matches.length) { toast("No hay partidos de hoy con equipos definidos", true); return; }
 
   $("#modal-card").innerHTML = `
     <div class="modal-title">✍️ Capturar predicción</div>
-    <div class="modal-sub">Registra el marcador de un participante que no alcanzó a enviarlo a tiempo. Se guardará con la <b>fecha y hora actual</b> de captura.</div>
+    <div class="modal-sub">Registra el marcador de un participante que no alcanzó a enviarlo a tiempo. Se guardará con hora de <b>16 minutos antes del inicio</b> del partido.</div>
     <div class="champ-picker">
       <label class="field"><span>Participante</span>
         <select class="champ-select" id="cap-pid">
@@ -1492,12 +1513,13 @@ function refreshCaptureInfo() {
   $("#cap-a").value = existing ? existing.a : "";
   $("#cap-b").value = existing ? existing.b : "";
 
+  const recIso = new Date(captureRecordedAt(m)).toISOString();
   const parts = [];
   parts.push(existing
     ? `Predicción actual: <b>${existing.a}–${existing.b}</b> (se reemplazará).`
     : "Sin predicción registrada.");
   if (m.played) parts.push(`⚠️ Este partido ya está marcado como <b>jugado</b> (${m.realA}–${m.realB}).`);
-  parts.push(`Se registrará con la fecha y hora actual: <b>${esc(fmtStamp(Date.now()))}</b>.`);
+  parts.push(`Se registrará como enviado: <b>${esc(fmtKickoff(recIso))}</b> (16 min antes del inicio).`);
   $("#cap-info").innerHTML = parts.join("<br>");
 }
 
@@ -1515,7 +1537,7 @@ async function adminCaptureSave() {
   const name = (state.data.participants[pid] || {}).name || pid;
   try {
     await db.ref(`tournaments/${state.code}/predictions/${mid}/${pid}`).set({
-      a, b, at: firebase.database.ServerValue.TIMESTAMP
+      a, b, at: captureRecordedAt(m)
     });
     toast(`Predicción de ${name} capturada ✓`);
     refreshCaptureInfo(); // refleja el nuevo valor sin cerrar el modal
