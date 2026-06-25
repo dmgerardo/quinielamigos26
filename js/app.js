@@ -439,6 +439,21 @@ const _AUDITF = new Intl.DateTimeFormat("es-MX", {
 function fmtStamp(ms) {
   return (typeof ms === "number" && isFinite(ms)) ? _AUDITF.format(new Date(ms)).replace(/,/g, "") : "—";
 }
+// Duración (ms) como "Nd Nh Nm Ns", omitiendo unidades iniciales en cero pero
+// siempre mostrando hasta segundos. "" si no es positiva.
+function fmtLeadTime(ms) {
+  if (typeof ms !== "number" || !isFinite(ms) || ms <= 0) return "";
+  let s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400); s -= d * 86400;
+  const h = Math.floor(s / 3600);  s -= h * 3600;
+  const m = Math.floor(s / 60);    s -= m * 60;
+  const parts = [];
+  if (d > 0) parts.push(d + "d");
+  if (h > 0 || parts.length) parts.push(h + "h");
+  if (m > 0 || parts.length) parts.push(m + "m");
+  parts.push(s + "s");
+  return parts.join(" ");
+}
 function fmtKickoff(iso) {
   if (!iso) return "";
   const s = _DTF.format(new Date(iso)).replace(/,/g, "");
@@ -1335,10 +1350,12 @@ function openAuditReport() {
       const matchLbl = `${teamName(m.teamA, m.slotA)} vs ${teamName(m.teamB, m.slotB)}`;
       const result = m.played ? `${m.realA}–${m.realB}` : "—";
       const pts = (pred && m.played) ? "+" + scoreMatch(pred, m.realA, m.realB) : "";
+      const lead = (typeof m.kickoffMs === "number" && typeof pred.at === "number") ? m.kickoffMs - pred.at : null;
+      const leadStr = fmtLeadTime(lead);
       return `<tr>
         <td>${esc2(matchLbl)}</td>
         <td class="c">${pred.a}–${pred.b}</td>
-        <td class="c">${fmtStamp(pred.at)}</td>
+        <td class="c">${fmtStamp(pred.at)}${leadStr ? `<br><span class="lead">${leadStr} antes del partido</span>` : ""}</td>
         <td class="c">${result}</td>
         <td class="c">${pts}</td>
       </tr>`;
@@ -1348,7 +1365,7 @@ function openAuditReport() {
       <div class="audit-part">
         <h3>${esc2(r.name)} <span class="muted">· Campeón: ${esc2(r.champ)} · Total: ${r.total} pts</span></h3>
         <table class="audit-tbl">
-          <thead><tr><th>Partido</th><th>Pronóstico</th><th>Capturado (fecha y hora)</th><th>Resultado</th><th>Pts</th></tr></thead>
+          <thead><tr><th>Partido</th><th>Pronóstico</th><th>Capturado (fecha y hora · antelación)</th><th>Resultado</th><th>Pts</th></tr></thead>
           <tbody>${body}</tbody>
         </table>
       </div>`;
@@ -1369,6 +1386,7 @@ function openAuditReport() {
       th { background: #eee; font-size: 10px; text-transform: uppercase; letter-spacing: .3px; }
       td.c, th.c { text-align: center; }
       .audit-part { margin-bottom: 14px; page-break-inside: avoid; }
+      .lead { color: #2563eb; font-size: 10px; }
       tfoot { font-size: 10px; color: #777; }
       @media print {
         body { margin: 12mm; }
