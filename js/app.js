@@ -247,6 +247,10 @@ function enterTournament(code) {
         state.data = snap.val();
         if (first) {
           first = false;
+          // Selecciona por defecto la fase en curso (según fecha) en Pronósticos y Admin.
+          const cur = currentRoundKey();
+          state.round = cur;
+          state.adminRound = cur;
           addHistory(code, state.data.name, state.name);
           hideLoader();
           showScreen("app");
@@ -312,6 +316,22 @@ function scheduleRender() {
 
 function matchesArray() {
   return Object.values(state.data.matches || {}).sort((a, b) => a.id.localeCompare(b.id));
+}
+
+// Ronda "en curso" según fecha: la del próximo partido (de hoy en adelante).
+// Si ya pasaron todos los partidos, devuelve la última ronda con partidos.
+function currentRoundKey() {
+  const ms = matchesArray();
+  if (!ms.length) return "grupos";
+  const startToday = startOfTodayMs();
+  const upcoming = ms
+    .filter((m) => typeof m.kickoffMs === "number" && m.kickoffMs >= startToday)
+    .sort((a, b) => a.kickoffMs - b.kickoffMs);
+  if (upcoming.length) return upcoming[0].round;
+  for (let i = ROUNDS.length - 1; i >= 0; i--) {
+    if (ms.some((m) => m.round === ROUNDS[i].key)) return ROUNDS[i].key;
+  }
+  return "grupos";
 }
 function myPreds() {
   const p = state.data.predictions || {};
