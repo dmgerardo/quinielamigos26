@@ -539,15 +539,24 @@ function matchCard(m, pred) {
     ? (pred ? "🔒 Predicción cerrada" : "🔒 Sin predicción")
     : (pred ? "✏️ Editar predicción" : "🎯 Hacer predicción");
 
+  // Bandera clickeable (abre el historial del equipo en el torneo). Solo si el
+  // equipo está definido (no "Por definir" en eliminatorias).
+  const flagSpan = (team) => {
+    const clickable = team.name && team.name !== "Por definir";
+    return `<span class="flag${clickable ? " flag-team" : ""}"${clickable
+      ? ` data-team="${esc(team.name)}" role="button" tabindex="0" title="Ver resultados de ${esc(team.name)} en este torneo"`
+      : ""}>${esc(team.flag)}</span>`;
+  };
+
   el.innerHTML = `
     <div class="match-top">
       <span class="match-meta">${metaLine(m)}</span>
       ${statusBadge(m)}
     </div>
     <div class="teams-row">
-      <div class="team"><span class="flag">${esc(m.teamA.flag)}</span><span class="tname">${esc(teamName(m.teamA, m.slotA))}</span></div>
+      <div class="team">${flagSpan(m.teamA)}<span class="tname">${esc(teamName(m.teamA, m.slotA))}</span></div>
       <span class="vs">VS</span>
-      <div class="team"><span class="flag">${esc(m.teamB.flag)}</span><span class="tname">${esc(teamName(m.teamB, m.slotB))}</span></div>
+      <div class="team">${flagSpan(m.teamB)}<span class="tname">${esc(teamName(m.teamB, m.slotB))}</span></div>
     </div>
     ${realRow}
     ${predRow}
@@ -558,7 +567,70 @@ function matchCard(m, pred) {
   const btn = el.querySelector(".match-action");
   if (!locked) btn.addEventListener("click", () => openPrediction(m.id));
   else btn.addEventListener("click", () => toast("Este partido ya está cerrado", true));
+
+  el.querySelectorAll(".flag-team").forEach((f) => {
+    const open = (e) => { e.stopPropagation(); openTeamHistory(f.dataset.team); };
+    f.addEventListener("click", open);
+    f.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") open(e); });
+  });
   return el;
+}
+
+/* ---------- Historial de un equipo en el torneo ----------
+ * Se abre al tocar la bandera de un equipo en la vista de pronósticos.
+ * Muestra todos sus partidos (jugados con resultado, y los próximos con estado),
+ * más un resumen de ganados/empatados/perdidos y goles. */
+function openTeamHistory(name) {
+  if (!name || name === "Por definir") return;
+  const flag = teamFlag(name);
+  const all = matchesArray()
+    .filter((m) => m.teamA.name === name || m.teamB.name === name)
+    .sort((a, b) => (a.kickoffMs || 0) - (b.kickoffMs || 0));
+
+  let w = 0, d = 0, l = 0, gf = 0, ga = 0;
+  const rows = all.map((m) => {
+    const isA = m.teamA.name === name;
+    const opp = isA ? m.teamB : m.teamA;
+    const oppName = teamName(opp, isA ? m.slotB : m.slotA);
+    let res;
+    if (m.played) {
+      const my = isA ? m.realA : m.realB;
+      const their = isA ? m.realB : m.realA;
+      gf += my; ga += their;
+      let cls, letter;
+      if (my > their) { cls = "win"; letter = "G"; w++; }
+      else if (my < their) { cls = "loss"; letter = "P"; l++; }
+      else { cls = "draw"; letter = "E"; d++; }
+      res = `<span class="th-score">${my}–${their}</span><span class="th-tag th-${cls}">${letter}</span>`;
+    } else {
+      res = `<span class="th-pending">${isLocked(m) ? "En juego" : "Por jugar"}</span>`;
+    }
+    return `<div class="th-row">
+      <div class="th-info">
+        <span class="th-when">${esc(roundLabel(m.round))}${m.group ? " · Grp " + esc(m.group) : ""}${m.kickoff ? " · " + esc(fmtDay(m.kickoff)) : ""}</span>
+        <span class="th-opp">${esc(flag)} ${esc(name)} <span class="th-vs">vs</span> ${esc(opp.flag)} ${esc(oppName)}</span>
+      </div>
+      <div class="th-res">${res}</div>
+    </div>`;
+  }).join("");
+
+  const playedCount = w + d + l;
+  const summary = playedCount
+    ? `${playedCount} jugado${playedCount !== 1 ? "s" : ""} · <b>${w}</b>G <b>${d}</b>E <b>${l}</b>P · goles ${gf}:${ga}`
+    : "Aún sin partidos jugados";
+
+  $("#modal-card").innerHTML = `
+    <div class="modal-title">${esc(flag)} ${esc(name)}</div>
+    <div class="modal-sub">Resultados en este torneo · ${summary}</div>
+    <div class="rp-scroll">
+      <div class="th-list">${rows || '<p class="empty">Sin partidos.</p>'}</div>
+    </div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-ghost" id="th-close">Cerrar</button>
+    </div>
+  `;
+  $("#th-close").addEventListener("click", closeModal);
+  openModal();
 }
 
 /* ---------- Modal PREDICCIÓN ---------- */
