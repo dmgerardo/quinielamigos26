@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1437" />
+  <title>Historial de versiones · Quiniela Mundial 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .hist { max-width: 640px; margin: 0 auto; padding: 24px 18px 60px; }
+    .hist h1 { font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+    .hist h1 span { color: var(--primary); }
+    .hist .lead { color: var(--muted); margin: 8px 0 22px; font-size: 15px; }
+    .ver-card {
+      background: linear-gradient(180deg, var(--card) 0%, var(--bg-2) 100%);
+      border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 16px 18px; margin-bottom: 12px;
+    }
+    .ver-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ver-badge {
+      display: inline-flex; align-items: center; background: rgba(20,224,163,.14);
+      color: var(--accent); border: 1px solid rgba(20,224,163,.35); border-radius: 999px;
+      padding: 2px 10px; font-size: 12px; font-weight: 800; white-space: nowrap;
+    }
+    .ver-badge.base { background: rgba(255,211,61,.14); color: var(--gold); border-color: rgba(255,211,61,.35); }
+    .ver-card h2 { font-size: 16px; font-weight: 700; margin: 0; }
+    .ver-card p { color: #d6ddff; font-size: 14px; line-height: 1.55; margin: 9px 0 0; }
+    .ver-card ul { margin: 9px 0 0 18px; display: flex; flex-direction: column; gap: 6px; }
+    .ver-card li { color: #d6ddff; font-size: 14px; line-height: 1.5; }
+    .stab { color: var(--muted); font-style: italic; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 8px; color: var(--text);
+      background: var(--card-2); border: 1px solid var(--line); border-radius: 12px;
+      padding: 11px 16px; text-decoration: none; font-weight: 700; font-size: 15px; margin-top: 8px;
+    }
+    .disc { color: var(--muted); font-size: 12px; text-align: center; margin-top: 22px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="hist">
+    <div class="hero-badge" style="display:inline-block;color:var(--accent);border:1px solid rgba(20,224,163,.4);border-radius:999px;padding:5px 14px;font-size:11px;letter-spacing:3px;font-weight:700;margin-bottom:14px;">🕘 HISTORIAL</div>
+    <h1>Historial de <span>versiones</span></h1>
+    <p class="lead">Los cambios más recientes aparecen primero. Aquí registramos las nuevas funciones; las correcciones internas se agrupan como “mejoras de estabilidad”.</p>
+
+    <!-- Las versiones más nuevas van ARRIBA. Al hacer un ajuste, agrega una tarjeta nueva al principio de esta lista. -->
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v61</span><h2>Historial de cada equipo</h2></div>
+      <p>En la pantalla de pronósticos ahora puedes <b>tocar la bandera</b> de un equipo para ver sus <b>resultados en el torneo</b>: cada partido con su marcador, su etiqueta de ganado/empatado/perdido y un resumen con goles a favor y en contra.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v60</span><h2>Fase en curso por defecto</h2></div>
+      <p>Al abrir la app, las secciones de <b>Pronósticos</b> y <b>Administrador</b> se posicionan automáticamente en la <b>fase que se está jugando</b> (grupos, 16avos, octavos, cuartos, semifinales o final), según la fecha.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v59</span><h2>Captura del administrador para partidos en curso</h2></div>
+      <p>El administrador ya puede <b>capturar pronósticos de partidos que están en juego</b>, y la lista de captura muestra <b>solo los partidos del día</b> para encontrarlos más rápido. Incluye mejoras de estabilidad.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v58</span><h2 class="stab">Mejoras de estabilidad</h2></div>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v57</span><h2>Antelación de cada pronóstico</h2></div>
+      <p>En el <b>reporte de auditoría</b>, la columna “Capturado” muestra además <b>cuánto tiempo antes del partido</b> se registró cada pronóstico (días, horas, minutos y segundos).</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v56</span><h2>Ocultar partidos futuros al pronosticar</h2></div>
+      <p>En la captura de pronósticos se muestran por defecto <b>solo los partidos de hoy</b>; un botón <b>“Próximos”</b> permite ver los de días siguientes. Los partidos pasados se siguen ocultando como antes.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v55</span><h2>Entrada directa a tu quiniela</h2></div>
+      <p>Si participas en <b>una sola quiniela</b>, la app entra directo a ella al abrirla. Para entrar a otra o registrar una nueva, usa el botón <b>Salir</b> (arriba a la derecha).</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v54</span><h2>Gráfica de tendencias</h2></div>
+      <p>Nueva <b>gráfica de líneas</b> que muestra cómo han evolucionado los <b>puntos acumulados</b> de cada participante partido a partido.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v53</span><h2>Reporte de puntos por partido</h2></div>
+      <p>En la sección de <b>Ranking</b>, nuevo reporte con los <b>puntos ganados y acumulados</b> de cada participante por partido, con controles para mostrar u ocultar columnas y una versión imprimible.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v52</span><h2>Ocultar partidos futuros al capturar resultados</h2></div>
+      <p>En la captura de resultados del administrador se ocultan por defecto los <b>partidos de días futuros</b>, con un botón para mostrarlos.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v51</span><h2>Equipos de eliminatorias por lista</h2></div>
+      <p>Al definir los equipos clasificados a las eliminatorias, el administrador los elige de una <b>lista desplegable</b> (agrupada por grupo) en lugar de escribirlos, evitando errores de captura.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge">v50</span><h2>Captura con botones y reporte de auditoría</h2></div>
+      <p>Captura de resultados con <b>botones + / −</b> (igual que los pronósticos), nuevo <b>reporte de auditoría imprimible</b>, corrección de horarios de varios partidos y mejoras de rendimiento.</p>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge base">Base</span><h2>Herramientas del administrador</h2></div>
+      <ul>
+        <li>Edición de <b>fecha y sede</b> de cualquier partido.</li>
+        <li><b>Reporte de participantes</b> y captura de predicciones a nombre de un participante.</li>
+        <li>Ranking con <b>tabla completa</b> y predicciones del grupo visibles en partidos en curso.</li>
+      </ul>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge base">Base</span><h2>Cuentas y seguridad</h2></div>
+      <ul>
+        <li><b>Contraseña</b> por participante e <b>identidad estable</b> entre dispositivos.</li>
+        <li>Protección con <b>Firebase App Check</b> (reCAPTCHA).</li>
+        <li><b>Lista pública</b> de quinielas para unirse fácilmente.</li>
+      </ul>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge base">Base</span><h2>Reglas del juego</h2></div>
+      <ul>
+        <li><b>Cierre de predicciones</b> 15 minutos antes de cada partido.</li>
+        <li>Elección de <b>campeón</b> definitiva, con fecha límite.</li>
+        <li>Horarios mostrados en tu <b>zona horaria local</b>.</li>
+      </ul>
+    </div>
+
+    <div class="ver-card">
+      <div class="ver-head"><span class="ver-badge base">Base</span><h2>Lanzamiento inicial</h2></div>
+      <p>Quiniela del <b>Mundial 2026</b> con el calendario oficial (<b>104 partidos</b>), predicciones de marcador, sistema de puntuación y <b>ranking en vivo</b> con Firebase.</p>
+    </div>
+
+    <a href="index.html" class="back-link">← Volver a la quiniela</a>
+
+    <p class="disc">Proyecto personal sin fines comerciales y sin afiliación, patrocinio ni licencia de la FIFA ni de ningún organismo oficial.</p>
+  </div>
+</body>
+</html>
