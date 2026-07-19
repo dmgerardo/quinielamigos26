@@ -74,11 +74,20 @@ function computeUserScore(matches, userPreds, championPick, realChampion) {
   return stats;
 }
 
-/** Campeón real = ganador del partido 'final' ya jugado. */
+/**
+ * Campeón real del torneo.
+ * Prioridad: campeón fijado manualmente por el admin en la final (campo
+ * `champion`), independiente del marcador — la final se captura a 90 min y
+ * puede terminar en empate (se define por penales, que no se capturan).
+ * Compatibilidad: si no se fijó manualmente, se deriva del marcador de la
+ * final si hay un ganador claro.
+ */
 function getRealChampion(matches) {
   const finalMatch = Object.values(matches || {}).find((m) => m.round === "final");
-  if (!finalMatch || !finalMatch.played) return null;
-  if (finalMatch.realA === finalMatch.realB) return null; // empate sin definir (debería ir a penales)
+  if (!finalMatch) return null;
+  if (typeof finalMatch.champion === "string" && finalMatch.champion) return finalMatch.champion;
+  if (!finalMatch.played) return null;
+  if (finalMatch.realA === finalMatch.realB) return null; // empate: el admin debe fijar el campeón
   return finalMatch.realA > finalMatch.realB
     ? finalMatch.teamA.name
     : finalMatch.teamB.name;

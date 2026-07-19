@@ -1171,6 +1171,7 @@ function adminCard(m) {
     <button class="btn btn-accent" style="margin-top:10px" id="save-${m.id}">${m.played ? "Actualizar resultado" : "Guardar resultado"}</button>
     ${editable ? `<button class="match-action" id="edit-${m.id}" style="margin-top:8px">✏️ Editar equipos (eliminatoria)</button>` : ""}
     <button class="match-action" id="info-${m.id}" style="margin-top:8px">📅 Editar fecha / sede</button>
+    ${m.round === "final" ? `<button class="match-action" id="champ-${m.id}" style="margin-top:8px">🏆 Definir campeón${m.champion ? ": " + esc(m.champion) : ""}</button>` : ""}
     ${m.played ? `<button class="match-action" id="clear-${m.id}" style="margin-top:8px">↺ Marcar como no jugado</button>` : ""}
   `;
 
@@ -1184,8 +1185,46 @@ function adminCard(m) {
   el.querySelector("#save-" + m.id).addEventListener("click", () => adminSaveResult(m.id));
   if (editable) el.querySelector("#edit-" + m.id).addEventListener("click", () => adminEditTeams(m.id));
   el.querySelector("#info-" + m.id).addEventListener("click", () => adminEditMatchInfo(m.id));
+  if (m.round === "final") el.querySelector("#champ-" + m.id).addEventListener("click", () => adminSetChampion(m.id));
   if (m.played) el.querySelector("#clear-" + m.id).addEventListener("click", () => adminClearResult(m.id));
   return el;
+}
+
+// Fija (o quita) el campeón del torneo manualmente, independiente del marcador
+// de la final. El campeón debe ser uno de los dos finalistas.
+function adminSetChampion(matchId) {
+  const m = state.data.matches[matchId];
+  const a = m.teamA, b = m.teamB;
+  const undef = a.name === "Por definir" || b.name === "Por definir";
+  const current = m.champion || "";
+  $("#modal-card").innerHTML = `
+    <div class="modal-title">🏆 Campeón del torneo</div>
+    <div class="modal-sub">Elige al campeón de la final. Es <b>independiente del marcador</b>: la final se captura a 90 minutos y puede terminar en empate (definida por penales).</div>
+    ${undef
+      ? `<p class="empty">Primero define los equipos de la final con “Editar equipos”.</p>`
+      : `<div class="champ-picker">
+          <button class="btn ${current === a.name ? "btn-accent" : "btn-ghost"}" id="champ-a">${esc(a.flag)} ${esc(a.name)}${current === a.name ? " ✓" : ""}</button>
+          <button class="btn ${current === b.name ? "btn-accent" : "btn-ghost"}" id="champ-b">${esc(b.flag)} ${esc(b.name)}${current === b.name ? " ✓" : ""}</button>
+        </div>`}
+    <div class="modal-actions" style="margin-top:14px">
+      ${current ? `<button class="btn btn-ghost" id="champ-clear">Quitar campeón (${esc(current)})</button>` : ""}
+      <button class="btn btn-ghost" id="champ-cancel">Cerrar</button>
+    </div>
+  `;
+  const setChamp = async (name) => {
+    try {
+      await db.ref(`tournaments/${state.code}/matches/${matchId}`).update({ champion: name });
+      closeModal();
+      toast(name ? `Campeón: ${name} 🏆` : "Campeón eliminado");
+    } catch (e) { toast("Error: " + e.message, true); }
+  };
+  if (!undef) {
+    $("#champ-a").addEventListener("click", () => setChamp(a.name));
+    $("#champ-b").addEventListener("click", () => setChamp(b.name));
+  }
+  if (current) $("#champ-clear").addEventListener("click", () => setChamp(null));
+  $("#champ-cancel").addEventListener("click", closeModal);
+  openModal();
 }
 
 async function adminSaveResult(matchId) {
