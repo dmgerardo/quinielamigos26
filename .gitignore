@@ -18,3 +18,9 @@ desktop.ini
 *.bk
 *.bak
 * - Copy*
+
+# Datos con información de participantes — NO publicar
+*-rtdb-export.json
+quinielamigos26-default-rtdb-export.json
+Auditoría*.pdf
+Auditoria*.pdf
