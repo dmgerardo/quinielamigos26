@@ -1,0 +1,68 @@
+MIT License
+
+Copyright (c) 2026 dmgerardo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+AVISO / NOTICE (español)
+================================================================================
+
+Este software se distribuye de forma gratuita y "TAL CUAL", sin garantía de
+ningún tipo. El autor NO se hace responsable de ningún daño, pérdida de datos,
+disputa entre participantes, costo de servicios de terceros (por ejemplo,
+Firebase) ni de cualquier otra consecuencia derivada del uso, instalación o
+modificación de este software. Cada persona que lo instale o despliegue es la
+única responsable de su propio uso, de sus credenciales, de los datos que
+recopile y de cumplir con las leyes aplicables en su país.
+
+Uso ético sugerido: úsalo con fines personales y recreativos entre amigos.
+No lo emplees para apuestas ilegales, spam, recolección indebida de datos
+personales, ni de forma que infrinja derechos de terceros. Si lo redistribuyes
+o lo modificas, conserva este archivo de licencia y da crédito al autor
+original.
+
+================================================================================
+COMPONENTES DE TERCEROS / THIRD-PARTY COMPONENTS
+================================================================================
+
+Esta aplicación utiliza los siguientes componentes, que se cargan desde sus
+respectivos CDN y conservan sus propias licencias. No están incluidos en este
+repositorio y su uso está sujeto a los términos de sus autores:
+
+- Firebase JavaScript SDK — Apache License 2.0
+  © Google LLC — https://github.com/firebase/firebase-js-sdk
+  (Realtime Database, Authentication, App Check)
+
+- Google reCAPTCHA v3 (usado por Firebase App Check) — sujeto a los
+  Términos de Servicio de Google — https://policies.google.com/terms
+
+- Fuente "Inter" (Google Fonts) — SIL Open Font License 1.1
+  © The Inter Project Authors — https://github.com/rsms/inter
+
+- Banderas y emojis — provistos por el sistema operativo / Unicode.
+
+================================================================================
+DESCARGO SOBRE LA FIFA / FIFA DISCLAIMER
+================================================================================
+
+Proyecto personal sin fines comerciales y SIN afiliación, patrocinio ni
+licencia de la FIFA ni de ningún organismo oficial. Los nombres de selecciones,
+el calendario de partidos y las banderas son de uso meramente informativo y
+pertenecen a sus respectivos titulares.
