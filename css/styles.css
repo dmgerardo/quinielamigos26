@@ -411,6 +411,8 @@ th.rp-champ,td.rp-champ{ text-align: left; font-size: 12px; color: var(--muted);
 .pr-table th.pr-acum { color: var(--accent); }
 .pr-res { color: var(--muted); font-weight: 400; font-size: 11px; margin-left: 4px; }
 .pr-table td.rp-name { min-width: 150px; font-size: 12px; }
+.pr-table tr.pr-champ-row td { background: rgba(255,211,61,.12); font-weight: 800; border-top: 2px solid var(--gold); }
+.pr-table tr.pr-champ-row td.rp-name { color: var(--gold); }
 
 /* Bandera clickeable (abre historial del equipo) */
 .flag-team { cursor: pointer; border-radius: 8px; transition: transform .1s, background .15s; }

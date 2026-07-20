@@ -804,7 +804,7 @@ function pointsReportData() {
 
   const order = Object.keys(parts).map((pid) => {
     const s = computeUserScore(matchesMap, predForView(pid), parts[pid].championPick, realChamp);
-    return { pid, name: parts[pid].name, total: s.total, exact: s.exact };
+    return { pid, name: parts[pid].name, total: s.total, exact: s.exact, championBonus: s.championBonus };
   }).sort((a, b) => b.total - a.total || b.exact - a.exact || a.name.localeCompare(b.name));
 
   const played = Object.values(matchesMap)
@@ -826,11 +826,23 @@ function pointsReportData() {
       cells
     };
   });
-  return { order, rows };
+
+  // Fila del bonus de campeón (+15) cuando ya hay campeón definido.
+  let champRow = null;
+  if (realChamp) {
+    const cells = order.map((p) => {
+      const won = p.championBonus || 0; // 15 si acertó al campeón, 0 si no
+      cum[p.pid] += won;
+      return { won, acum: cum[p.pid] };
+    });
+    champRow = { label: `🏆 Campeón: ${realChamp}`, result: `+${CHAMPION_POINTS}`, cells, isChamp: true };
+  }
+
+  return { order, rows, champRow, realChamp };
 }
 
 function pointsReportTableHtml(data, flags) {
-  const { order, rows } = data;
+  const { order, rows, champRow } = data;
   const P = order.length;
   const showG = flags.ganados, showA = flags.acum;
 
@@ -842,11 +854,13 @@ function pointsReportTableHtml(data, flags) {
   if (showG) h2 += order.map((p) => `<th class="rp-num">${esc(p.name)}</th>`).join("");
   if (showA) h2 += order.map((p) => `<th class="rp-num pr-acum">${esc(p.name)}</th>`).join("");
 
-  const body = rows.map((r) => {
+  const allRows = champRow ? rows.concat(champRow) : rows;
+  const body = allRows.map((r) => {
+    const cls = r.isChamp ? ' class="pr-champ-row"' : "";
     let tds = `<td class="rp-name">${esc(r.label)} <span class="pr-res">${esc(r.result)}</span></td>`;
     if (showG) tds += r.cells.map((c) => `<td class="rp-num">${c.won}</td>`).join("");
     if (showA) tds += r.cells.map((c) => `<td class="rp-num pr-acum">${c.acum}</td>`).join("");
-    return `<tr>${tds}</tr>`;
+    return `<tr${cls}>${tds}</tr>`;
   }).join("");
 
   return `<table class="rp-table pr-table">
@@ -857,7 +871,7 @@ function pointsReportTableHtml(data, flags) {
 
 function openPointsReport() {
   const data = pointsReportData();
-  if (!data.rows.length) { toast("Aún no hay partidos jugados para el reporte", true); return; }
+  if (!data.rows.length && !data.champRow) { toast("Aún no hay partidos jugados para el reporte", true); return; }
   renderPointsReportModal(data);
   openModal();
 }
@@ -904,6 +918,7 @@ function printPointsReport(data) {
       .pr-block { background: #d9e7ff; text-transform: uppercase; letter-spacing: .3px; }
       .pr-block.pr-acum { background: #ffe9cf; }
       .pr-res { color: #777; font-weight: 400; }
+      tr.pr-champ-row td { background: #fff5d6; font-weight: 800; border-top: 2px solid #d9a400; }
       .noprint { margin-bottom: 14px; }
       .noprint button { font-size: 13px; padding: 8px 16px; margin-right: 8px; cursor: pointer; }
       @media print { .noprint { display: none; } body { margin: 10mm; } }
@@ -927,10 +942,12 @@ function printPointsReport(data) {
  * largo de los partidos jugados. Se abre en una ventana nueva (SVG, scroll
  * horizontal e imprimible). */
 function openPointsChart(data) {
-  const { order, rows } = data;
-  if (!rows.length || !order.length) { toast("No hay datos para la gráfica", true); return; }
+  const { order } = data;
+  // Incluye la columna del bonus de campeón al final (si ya hay campeón).
+  const cols = data.champRow ? data.rows.concat(data.champRow) : data.rows;
+  if (!cols.length || !order.length) { toast("No hay datos para la gráfica", true); return; }
 
-  const N = rows.length;
+  const N = cols.length;
   const palette = ["#3aa0ff", "#ff7a3a", "#2ecc71", "#1fc4d6", "#e84393", "#f4d03f",
                    "#9b59b6", "#e74c3c", "#16a085", "#e67e22", "#56d364", "#ff6ad5",
                    "#c0c0c0", "#7f8cff", "#f78fb3", "#00b894"];
@@ -938,7 +955,7 @@ function openPointsChart(data) {
   const series = order.map((p, i) => ({
     name: p.name,
     color: palette[i % palette.length],
-    vals: rows.map((r) => r.cells[i].acum)
+    vals: cols.map((r) => r.cells[i].acum)
   }));
 
   let maxAcum = 1;
@@ -968,10 +985,11 @@ function openPointsChart(data) {
 
   // Etiquetas eje X (rotadas)
   let xlabels = "";
-  rows.forEach((r, i) => {
+  cols.forEach((r, i) => {
     const xx = xAt(i);
     const lbl = esc(`${r.label} ${r.result}`);
-    xlabels += `<text x="${xx}" y="${mT + plotH + 14}" transform="rotate(-60 ${xx} ${mT + plotH + 14})" text-anchor="end" font-size="11" fill="#c7d3f5">${lbl}</text>`;
+    const fill = r.isChamp ? "#f4d03f" : "#c7d3f5";
+    xlabels += `<text x="${xx}" y="${mT + plotH + 14}" transform="rotate(-60 ${xx} ${mT + plotH + 14})" text-anchor="end" font-size="11" fill="${fill}">${lbl}</text>`;
   });
 
   // Líneas + puntos
@@ -1010,7 +1028,7 @@ function openPointsChart(data) {
     <div class="bar noprint">
       <button onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
       <button onclick="window.close()">Cerrar</button>
-      <span class="info">${esc(state.data.name || state.code)} · ${N} partido(s) jugado(s)</span>
+      <span class="info">${esc(state.data.name || state.code)} · ${data.rows.length} partido(s) jugado(s)${data.champRow ? " · incluye campeón" : ""}</span>
     </div>
     <div class="legend">${legendHtml}</div>
     <div class="chart">${svg}</div>
@@ -1366,10 +1384,20 @@ function openAdminReport() {
       <td class="rp-num">${r.total}</td>
       <td class="rp-num">${r.correct}</td>
       <td class="rp-num">${r.exact}</td>
-      <td class="rp-champ">${esc(r.champ)}</td>
+      <td class="rp-champ">${esc(r.champ)}${r.championBonus > 0 ? ` <b class="rp-pts pos">+${CHAMPION_POINTS}</b>` : ""}</td>
       <td class="rp-num">${r.predCount}/${predectable}</td>
     </tr>`;
   }).join("");
+
+  // Bloque de campeón (+15) — hace visible el bonus por acertar al campeón.
+  const champBlock = realChamp ? `
+    <div class="section-title" style="margin:18px 0 10px">🏆 Campeón mundial: ${esc(realChamp)} <span style="color:var(--muted);font-size:12px">(+${CHAMPION_POINTS} pts)</span></div>
+    <div class="rp-match">
+      ${scored.map((r) => `<div class="rp-pred-row">
+        <span class="rp-pred-name">${esc(r.name)}</span>
+        <span class="rp-pred-val">${esc(r.champ)} <b class="rp-pts ${r.championBonus > 0 ? "pos" : "zero"}">+${r.championBonus > 0 ? CHAMPION_POINTS : 0}</b></span>
+      </div>`).join("")}
+    </div>` : "";
 
   // Detalle por partido (jugados o cerrados)
   const closedMatches = matches.filter((m) => m.played || isLocked(m))
@@ -1420,6 +1448,7 @@ function openAdminReport() {
           <tbody>${tableRows}</tbody>
         </table>
       </div>
+      ${champBlock}
       <div class="section-title" style="margin:18px 0 10px">Predicciones por partido</div>
       <div class="rp-matches">${matchBlocks}</div>
     </div>
@@ -1469,7 +1498,7 @@ function openAuditReport() {
       <td class="c">${r.total}</td>
       <td class="c">${r.correct}</td>
       <td class="c">${r.exact}</td>
-      <td>${esc2(r.champ)}</td>
+      <td>${esc2(r.champ)}${realChamp && r.championBonus > 0 ? ` <b>(+${CHAMPION_POINTS})</b>` : ""}</td>
       <td class="c">${Object.keys(r.preds).length}</td>
     </tr>`).join("");
 
@@ -1491,10 +1520,18 @@ function openAuditReport() {
         <td class="c">${pts}</td>
       </tr>`;
     }).join("");
-    const body = rows || `<tr><td colspan="5" class="muted">Sin pronósticos capturados.</td></tr>`;
+    // Fila del bonus de campeón (si ya hay campeón definido).
+    const champLine = realChamp ? `<tr>
+        <td>🏆 Campeón mundial: ${esc2(realChamp)}</td>
+        <td class="c">${esc2(r.champ)}</td>
+        <td class="c">—</td>
+        <td class="c">—</td>
+        <td class="c">+${r.championBonus > 0 ? CHAMPION_POINTS : 0}</td>
+      </tr>` : "";
+    const body = (rows + champLine) || `<tr><td colspan="5" class="muted">Sin pronósticos capturados.</td></tr>`;
     return `
       <div class="audit-part">
-        <h3>${esc2(r.name)} <span class="muted">· Campeón: ${esc2(r.champ)} · Total: ${r.total} pts</span></h3>
+        <h3>${esc2(r.name)} <span class="muted">· Campeón: ${esc2(r.champ)}${realChamp && r.championBonus > 0 ? " ✓ +" + CHAMPION_POINTS : ""} · Total: ${r.total} pts</span></h3>
         <table class="audit-tbl">
           <thead><tr><th>Partido</th><th>Pronóstico</th><th>Capturado (fecha y hora · antelación)</th><th>Resultado</th><th>Pts</th></tr></thead>
           <tbody>${body}</tbody>
@@ -1553,6 +1590,8 @@ function openAuditReport() {
       Los pronósticos capturados por el administrador en nombre de un participante se registran con hora de 16 minutos antes
       del inicio del partido. La «antelación» es el tiempo entre esa marca y el inicio del partido; no se muestra si el pronóstico
       se registró después del inicio. «—» indica que no existe marca de tiempo.
+      La fila «🏆 Campeón mundial» refleja el bonus de ${CHAMPION_POINTS} puntos que reciben quienes acertaron al campeón del torneo;
+      ya está incluido en la columna «Pts» del resumen.
     </p>
     </body></html>`;
 
